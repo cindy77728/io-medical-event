@@ -219,6 +219,21 @@
     .ghost-button:hover { background: var(--teal-2); }
     .danger-button { background: var(--red-2); color: var(--red); border-color: #f5c7c7; }
     .backup-action { white-space: nowrap; }
+    .cloud-save-button { position: relative; min-width: 146px; }
+    .cloud-status-dot { width: 9px; height: 9px; border-radius: 50%; background: #9aa9ad; box-shadow: 0 0 0 3px rgba(154,169,173,.15); flex: 0 0 auto; }
+    .cloud-status-dot.ready { background: var(--teal); box-shadow: 0 0 0 3px rgba(8,127,117,.14); }
+    .cloud-status-dot.pending { background: #d89b29; box-shadow: 0 0 0 3px rgba(216,155,41,.16); }
+    .cloud-status-dot.saving { background: var(--blue); box-shadow: 0 0 0 3px rgba(49,113,183,.15); animation: cloudPulse 1s ease-in-out infinite; }
+    .cloud-status-dot.error { background: var(--red); box-shadow: 0 0 0 3px rgba(190,58,58,.14); }
+    @keyframes cloudPulse { 50% { opacity: .35; transform: scale(.75); } }
+    .cloud-settings-modal { width: min(720px, 96vw); }
+    .cloud-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cloud-settings-grid .full { grid-column: 1 / -1; }
+    .cloud-option { display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 11px; background: #fbfdfd; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .cloud-option input { margin-top: 2px; accent-color: var(--teal); }
+    .cloud-option strong { display: block; color: var(--ink); margin-bottom: 2px; }
+    .cloud-status-box { padding: 11px 12px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .cloud-status-box strong { color: var(--ink); }
     button svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
 
     .content { padding: 26px 32px 42px; }
@@ -735,7 +750,9 @@
       .budget-row { grid-template-columns: 90px minmax(0,1fr); }
       .budget-values { grid-column: 2; text-align: left; }
       .topbar-actions .primary-button span, .topbar-actions .backup-action span { display: none; }
-      .topbar-actions .primary-button, .topbar-actions .backup-action { width: 42px; padding: 0; }
+      .topbar-actions .primary-button, .topbar-actions .backup-action { width: 42px; min-width: 42px; padding: 0; }
+      .cloud-settings-grid { grid-template-columns: 1fr; }
+      .cloud-settings-grid .full { grid-column: auto; }
     }
     @media (max-width: 470px) {
       .kpi-grid { grid-template-columns: 1fr; }
@@ -791,6 +808,10 @@
 
       <div class="nav-label">Administration</div>
       <nav class="nav-list" aria-label="Administration navigation">
+        <button class="nav-button" id="cloudBackupNavButton" type="button">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M7 18a4.6 4.6 0 0 1-.7-9.1A6.5 6.5 0 0 1 18.5 8a4 4 0 0 1 .5 8H8"/><path d="M12 19V10M8.5 13.5 12 10l3.5 3.5"/></svg></span>
+          Encrypted cloud backup
+        </button>
         <button class="nav-button" data-view="settings">
           <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 2l.05.05-2.83 2.83-.05-.05a1.8 1.8 0 0 0-2-.36 1.8 1.8 0 0 0-1.08 1.65V21H9.85v-.08a1.8 1.8 0 0 0-1.08-1.65 1.8 1.8 0 0 0-2 .36l-.05.05-2.83-2.83.05-.05a1.8 1.8 0 0 0 .36-2A1.8 1.8 0 0 0 2.65 13H2.6V9h.08A1.8 1.8 0 0 0 4.3 7.92a1.8 1.8 0 0 0-.36-2l-.05-.05 2.83-2.83.05.05a1.8 1.8 0 0 0 2 .36A1.8 1.8 0 0 0 9.85 1.8V1.7h4v.08a1.8 1.8 0 0 0 1.08 1.65 1.8 1.8 0 0 0 2-.36l.05-.05 2.83 2.83-.05.05a1.8 1.8 0 0 0-.36 2A1.8 1.8 0 0 0 21.05 9H21.1v4h-.08A1.8 1.8 0 0 0 19.4 15Z"/></svg></span>
           Workflow settings
@@ -822,6 +843,8 @@
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
             <input id="globalSearch" type="search" placeholder="Search event, city, physician…" aria-label="Search events and physicians" />
           </div>
+          <button class="secondary-button backup-action cloud-save-button" id="cloudBackupNow" title="Configure encrypted cloud backup" aria-label="Save encrypted backup to GitHub"><span class="cloud-status-dot" id="cloudBackupDot" aria-hidden="true"></span><svg viewBox="0 0 24 24"><path d="M7 18a4.6 4.6 0 0 1-.7-9.1A6.5 6.5 0 0 1 18.5 8a4 4 0 0 1 .5 8H8"/><path d="M12 19V10M8.5 13.5 12 10l3.5 3.5"/></svg><span id="cloudBackupLabel">Cloud backup</span></button>
+          <button class="icon-button" id="cloudBackupSettings" title="Encrypted cloud backup settings" aria-label="Open encrypted cloud backup settings"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.7 8.1 7 10 4.3-1.9 7-5.4 7-10V6l-7-3Z"/><path d="M9 12h6M12 9v6"/></svg></button>
           <button class="secondary-button backup-action" id="exportBackup" title="Download password-protected backup" aria-label="Download password-protected backup"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4"/><path d="M4 19h16"/></svg><span>Backup</span></button>
           <button class="secondary-button backup-action" id="importBackup" title="Restore backup on this computer" aria-label="Restore backup on this computer"><svg viewBox="0 0 24 24"><path d="M12 21V9M8 13l4-4 4 4"/><path d="M4 5h16"/></svg><span>Restore</span></button>
           <input id="restoreBackupInput" type="file" accept=".ioebackup,.json,application/json" hidden />
@@ -1113,9 +1136,43 @@
           </section>
         </div>
 
-        <div class="local-storage-note"><strong>Privacy reminder:</strong> file contents remain only in this browser in the prototype. Do not commit real CVs, rate cards or contracts to GitHub, and do not include patient information.</div>
+        <div class="local-storage-note"><strong>Privacy reminder:</strong> files remain in this browser unless encrypted cloud backup is explicitly configured. Use only a separate, approved private repository; never save real CVs, rate cards, contracts or patient information to the public GitHub Pages repository.</div>
       </div>
       <div class="modal-footer split"><button class="danger-button" id="deletePhysicianProfile" hidden>Delete profile</button><div class="modal-footer-actions"><button class="secondary-button" data-close-physician-modal>Close</button><button class="primary-button" id="savePhysicianProfile">Save physician record</button></div></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="cloudBackupModal">
+    <div class="modal cloud-settings-modal" role="dialog" aria-modal="true" aria-labelledby="cloudBackupTitle">
+      <div class="modal-header">
+        <div class="modal-header-copy"><h2 id="cloudBackupTitle">Encrypted cloud backup</h2><p class="modal-subtitle">Automatically copy the latest saved records and documents to a private GitHub repository.</p></div>
+        <button class="icon-button" data-close-cloud-modal aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="notice-banner" style="margin-bottom:14px">
+          <svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.7 8.1 7 10 4.3-1.9 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <div><strong>Use a separate, approved private repository.</strong> Do not store real physician records or documents in the public GitHub Pages repository. The cloud file is encrypted before upload, but this remains a browser-based prototype rather than approved enterprise storage.</div>
+        </div>
+        <div class="cloud-settings-grid">
+          <div class="field full"><label for="cloudGitHubToken">GitHub fine-grained personal access token *</label><input class="input" type="password" id="cloudGitHubToken" autocomplete="off" placeholder="github_pat_... with Contents read/write access" /><small class="field-help">The token is stored only in this browser. Limit it to the private backup repository.</small></div>
+          <div class="field"><label for="cloudGitHubOwner">GitHub owner *</label><input class="input" id="cloudGitHubOwner" placeholder="GitHub username or organization" /></div>
+          <div class="field"><label for="cloudGitHubRepo">Private repository *</label><input class="input" id="cloudGitHubRepo" placeholder="io-medical-event-backups" /></div>
+          <div class="field"><label for="cloudGitHubBranch">Branch *</label><input class="input" id="cloudGitHubBranch" value="main" /></div>
+          <div class="field"><label for="cloudGitHubPath">Encrypted backup path *</label><input class="input" id="cloudGitHubPath" value="backups/ioe-event-hub-latest.ioebackup" /></div>
+          <div class="field full"><label for="cloudBackupPassword">Encryption password *</label><input class="input" type="password" id="cloudBackupPassword" autocomplete="new-password" minlength="8" placeholder="At least 8 characters; needed on a replacement computer" /><small class="field-help">This password cannot be recovered. Store it in an approved password manager, not in the GitHub repository.</small></div>
+          <label class="cloud-option full"><input type="checkbox" id="cloudRememberPassword" checked /><span><strong>Remember the encryption password on this device</strong>Required for unattended auto-save after reopening the browser. Uncheck it to keep the password only until this tab closes.</span></label>
+          <label class="cloud-option full"><input type="checkbox" id="cloudAutoSaveEnabled" checked /><span><strong>Automatically back up saved changes</strong>Runs about 20 seconds after the last saved change and also checks every 10 minutes.</span></label>
+          <div class="cloud-status-box full" id="cloudBackupModalStatus"><strong>Status:</strong> Not configured.</div>
+        </div>
+      </div>
+      <div class="modal-footer split">
+        <button class="danger-button" id="clearCloudBackupSettings">Clear credentials</button>
+        <div class="modal-footer-actions">
+          <button class="secondary-button" id="restoreCloudBackup">Restore latest</button>
+          <button class="secondary-button" id="saveCloudBackupSettings">Save settings</button>
+          <button class="primary-button" id="saveCloudBackupNowFromModal">Save now</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1369,6 +1426,15 @@ Thank you.`;
     const BACKUP_FORMAT = 'ioe-event-hub-encrypted-backup';
     const BACKUP_VERSION = 1;
     const BACKUP_KDF_ITERATIONS = 250000;
+    const CLOUD_BACKUP_INTERVAL_MS = 10 * 60 * 1000;
+    const CLOUD_BACKUP_DEBOUNCE_MS = 20 * 1000;
+    const CLOUD_BACKUP_MAX_BYTES = 50 * 1024 * 1024;
+    let cloudBackupSessionPassword = '';
+    let cloudBackupDebounceTimer = null;
+    let cloudBackupIntervalTimer = null;
+    let cloudBackupInProgress = false;
+    let cloudBackupDirty = false;
+    let cloudBackupRevision = 0;
     const PHYSICIAN_DOCUMENT_TYPES = {
       cv: { property:'cv', label:'Curriculum vitae', shortLabel:'CV', extensions:['pdf','doc','docx'], accept:'.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document', help:'PDF, DOC or DOCX · up to 15 MB' },
       honorarium: { property:'honorariumFile', label:'Honorarium rate card', shortLabel:'Rate card', extensions:['pdf','doc','docx','xls','xlsx','csv','png','jpg','jpeg'], accept:'.pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,image/png,image/jpeg', help:'PDF, Office file, CSV, PNG or JPG · up to 15 MB' },
@@ -1650,6 +1716,7 @@ Thank you.`;
     function saveState() {
       try {
         localStorage.setItem('ioeEventHubState', JSON.stringify({ events: state.events, physicians: state.physicians, settings: state.settings }));
+        markCloudBackupPending();
       } catch (e) {
         console.warn('Browser storage is unavailable; this session will not persist after closing the page.', e);
       }
@@ -2169,7 +2236,7 @@ Thank you.`;
       const target = document.getElementById('physicianTable');
       target.innerHTML = list.length ? list.map(p => {
         const assignments = physicianAssignments(p.id);
-        const docs = physicianDocumentReadiness(p, event);
+        const docs = physicianDocumentReadiness(p);
         const eventChips = assignments.length ? assignments.slice(0,3).map(event => `<button class="event-chip" data-open-event="${event.id}" title="Open ${escapeHtml(event.name)}">${escapeHtml(event.name.length > 25 ? event.name.slice(0,25)+'…' : event.name)}</button>`).join('') + (assignments.length > 3 ? `<span class="event-sub">+${assignments.length-3} more</span>` : '') : '<span class="event-sub">Not assigned</span>';
         const cvCell = `<div class="document-status-stack">${statusPill(docs.cvReady ? 'CV uploaded' : 'CV missing')}<small>${p.cv ? `${escapeHtml(p.cv.name)} · ${formatFileSize(p.cv.size)}` : PHYSICIAN_DOCUMENT_TYPES.cv.help}</small></div>`;
         const honorariumCell = `<div class="document-status-stack">${statusPill(docs.honorarium.label)}<small>${escapeHtml(docs.honorarium.detail)}${p.honorariumFile ? ` · ${escapeHtml(p.honorariumFile.name)}` : ''}</small></div>`;
@@ -2957,48 +3024,54 @@ Thank you.`;
       if (input) input.value = '';
     }
 
+    async function buildPortableBackupEnvelope(password) {
+      if (!window.crypto?.subtle) throw new Error('This browser does not support the encryption required for portable backups.');
+      const files = [];
+      const missing = [];
+      for (const meta of referencedDocumentMetadata()) {
+        const blob = await getFileBlob(meta.storageKey);
+        if (!blob) { missing.push(meta.name || meta.storageKey); continue; }
+        files.push({
+          storageKey:meta.storageKey,
+          name:meta.name || 'document',
+          type:meta.type || blob.type || 'application/octet-stream',
+          size:Number(meta.size || blob.size || 0),
+          uploadedAt:meta.uploadedAt || '',
+          lastModified:Number(blob.lastModified || 0),
+          dataBase64:await blobToBase64(blob)
+        });
+      }
+      const includedStorageKeys = new Set(files.map(file => file.storageKey));
+      const backupState = sanitizeBackupStateForFiles({ events:deepClone(state.events), physicians:deepClone(state.physicians), settings:deepClone(state.settings) }, includedStorageKeys);
+      const payload = {
+        app:'IO&E Medical Event Hub',
+        payloadVersion:1,
+        createdAt:new Date().toISOString(),
+        sourceOrigin:location.origin,
+        state:backupState,
+        files
+      };
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveBackupKey(password, salt, 'encrypt');
+      const encoded = new TextEncoder().encode(JSON.stringify(payload));
+      const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, encoded));
+      const envelope = {
+        format:BACKUP_FORMAT,
+        version:BACKUP_VERSION,
+        createdAt:payload.createdAt,
+        encryption:{ algorithm:'AES-GCM', kdf:'PBKDF2-SHA-256', iterations:BACKUP_KDF_ITERATIONS, salt:bytesToBase64(salt), iv:bytesToBase64(iv) },
+        payload:bytesToBase64(encrypted)
+      };
+      return { envelope, files, missing };
+    }
+
     async function exportPortableBackup(password) {
       if (!window.crypto?.subtle) { showToast('Backup unavailable','This browser does not support the encryption required for portable backups.'); return false; }
       const button = document.getElementById('exportBackup');
       if (button) button.disabled = true;
       try {
-        const files = [];
-        const missing = [];
-        for (const meta of referencedDocumentMetadata()) {
-          const blob = await getFileBlob(meta.storageKey);
-          if (!blob) { missing.push(meta.name || meta.storageKey); continue; }
-          files.push({
-            storageKey:meta.storageKey,
-            name:meta.name || 'document',
-            type:meta.type || blob.type || 'application/octet-stream',
-            size:Number(meta.size || blob.size || 0),
-            uploadedAt:meta.uploadedAt || '',
-            lastModified:Number(blob.lastModified || 0),
-            dataBase64:await blobToBase64(blob)
-          });
-        }
-        const includedStorageKeys = new Set(files.map(file => file.storageKey));
-        const backupState = sanitizeBackupStateForFiles({ events:deepClone(state.events), physicians:deepClone(state.physicians), settings:deepClone(state.settings) }, includedStorageKeys);
-        const payload = {
-          app:'IO&E Medical Event Hub',
-          payloadVersion:1,
-          createdAt:new Date().toISOString(),
-          sourceOrigin:location.origin,
-          state:backupState,
-          files
-        };
-        const salt = crypto.getRandomValues(new Uint8Array(16));
-        const iv = crypto.getRandomValues(new Uint8Array(12));
-        const key = await deriveBackupKey(password, salt, 'encrypt');
-        const encoded = new TextEncoder().encode(JSON.stringify(payload));
-        const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, encoded));
-        const envelope = {
-          format:BACKUP_FORMAT,
-          version:BACKUP_VERSION,
-          createdAt:payload.createdAt,
-          encryption:{ algorithm:'AES-GCM', kdf:'PBKDF2-SHA-256', iterations:BACKUP_KDF_ITERATIONS, salt:bytesToBase64(salt), iv:bytesToBase64(iv) },
-          payload:bytesToBase64(encrypted)
-        };
+        const { envelope, files, missing } = await buildPortableBackupEnvelope(password);
         const blob = new Blob([JSON.stringify(envelope)], { type:'application/json' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
@@ -3029,6 +3102,34 @@ Thank you.`;
       return validateBackupPayload(JSON.parse(new TextDecoder().decode(decrypted)));
     }
 
+    async function applyRestoredBackupPayload(payload, sourceLabel = 'backup') {
+      const created = payload.createdAt ? new Date(payload.createdAt).toLocaleString() : 'an unknown date';
+      const message = `Restore the ${sourceLabel} created ${created}?\n\nThis will replace all records and locally stored documents currently saved in this browser. This action cannot be undone unless you create a backup first.`;
+      if (!confirm(message)) return true;
+
+      const decodedFiles = payload.files.map(item => ({
+        storageKey:item.storageKey,
+        blob:new File([base64ToBytes(item.dataBase64)], item.name || 'document', { type:item.type || 'application/octet-stream', lastModified:Number(item.lastModified || Date.now()) })
+      }));
+
+      await clearFileStore();
+      for (const item of decodedFiles) await putFileBlob(item.storageKey, item.blob);
+
+      state.events = deepClone(payload.state.events);
+      state.physicians = deepClone(payload.state.physicians);
+      state.settings = { ...defaultSettings, ...(payload.state.settings || {}), required:{ ...defaultSettings.required, ...(payload.state.settings?.required || {}) } };
+      state.lastExtraction = null;
+      migratePhysicianData();
+      saveState();
+      closeDrawer();
+      closeNewEventModal();
+      closePhysicianModal();
+      renderAll();
+      setView('portfolio');
+      showToast('Backup restored',`${state.events.length} events, ${state.physicians.length} physicians and ${decodedFiles.length} documents are now available on this computer.`);
+      return true;
+    }
+
     async function restorePortableBackup(file, password) {
       if (!file) return false;
       if (!window.crypto?.subtle) { showToast('Restore unavailable','This browser does not support the encryption required for portable backups.'); return false; }
@@ -3042,31 +3143,7 @@ Thank you.`;
           showToast('Backup could not be opened','The password may be incorrect, or the backup file may be damaged.');
           return false;
         }
-        const created = payload.createdAt ? new Date(payload.createdAt).toLocaleString() : 'an unknown date';
-        const message = `Restore the backup created ${created}?\n\nThis will replace all records and locally stored documents currently saved in this browser. This action cannot be undone unless you create a backup first.`;
-        if (!confirm(message)) return true;
-
-        const decodedFiles = payload.files.map(item => ({
-          storageKey:item.storageKey,
-          blob:new File([base64ToBytes(item.dataBase64)], item.name || 'document', { type:item.type || 'application/octet-stream', lastModified:Number(item.lastModified || Date.now()) })
-        }));
-
-        await clearFileStore();
-        for (const item of decodedFiles) await putFileBlob(item.storageKey, item.blob);
-
-        state.events = deepClone(payload.state.events);
-        state.physicians = deepClone(payload.state.physicians);
-        state.settings = { ...defaultSettings, ...(payload.state.settings || {}), required:{ ...defaultSettings.required, ...(payload.state.settings?.required || {}) } };
-        state.lastExtraction = null;
-        migratePhysicianData();
-        saveState();
-        closeDrawer();
-        closeNewEventModal();
-        closePhysicianModal();
-        renderAll();
-        setView('portfolio');
-        showToast('Backup restored',`${state.events.length} events, ${state.physicians.length} physicians and ${decodedFiles.length} documents are now available on this computer.`);
-        return true;
+        return await applyRestoredBackupPayload(payload, 'selected backup');
       } catch (error) {
         console.error(error);
         showToast('Restore failed',error?.message || 'The selected file is not a valid backup.');
@@ -3090,6 +3167,316 @@ Thank you.`;
         submit.disabled = false;
         submit.textContent = originalText;
       }
+    }
+
+    function inferCloudGitHubDefaults() {
+      const githubPages = location.hostname.endsWith('.github.io');
+      const owner = githubPages ? location.hostname.split('.')[0] : '';
+      const repo = githubPages ? location.pathname.split('/').filter(Boolean)[0] || '' : '';
+      return { owner, repo: repo ? `${repo}-backups` : '', branch:'main', path:'backups/ioe-event-hub-latest.ioebackup' };
+    }
+
+    function getCloudBackupSettings() {
+      const defaults = inferCloudGitHubDefaults();
+      return {
+        token:localStorage.getItem('ioeCloudGitHubToken') || '',
+        owner:localStorage.getItem('ioeCloudGitHubOwner') || defaults.owner,
+        repo:localStorage.getItem('ioeCloudGitHubRepo') || defaults.repo,
+        branch:localStorage.getItem('ioeCloudGitHubBranch') || defaults.branch,
+        path:localStorage.getItem('ioeCloudGitHubPath') || defaults.path,
+        enabled:localStorage.getItem('ioeCloudAutoSaveEnabled') !== 'false',
+        password:cloudBackupSessionPassword || localStorage.getItem('ioeCloudBackupPassword') || '',
+        rememberPassword:localStorage.getItem('ioeCloudRememberPassword') !== 'false'
+      };
+    }
+
+    function cloudSettingsComplete(settings = getCloudBackupSettings()) {
+      return Boolean(settings.token && settings.owner && settings.repo && settings.branch && settings.path && settings.password?.length >= 8);
+    }
+
+    function setCloudBackupStatus(mode, detail = '') {
+      const dot = document.getElementById('cloudBackupDot');
+      const label = document.getElementById('cloudBackupLabel');
+      const button = document.getElementById('cloudBackupNow');
+      if (!dot || !label || !button) return;
+      dot.className = `cloud-status-dot ${mode || ''}`.trim();
+      const lastSaved = localStorage.getItem('ioeCloudBackupLastSavedAt');
+      const labels = {
+        unconfigured:'Cloud setup',
+        ready:lastSaved ? `Saved ${new Date(lastSaved).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}` : 'Cloud ready',
+        pending:'Cloud pending',
+        saving:'Cloud saving',
+        error:'Cloud failed'
+      };
+      label.textContent = labels[mode] || 'Cloud backup';
+      button.title = detail || ({
+        unconfigured:'Configure encrypted cloud backup',
+        ready:lastSaved ? `Last encrypted cloud backup: ${new Date(lastSaved).toLocaleString()}` : 'Encrypted cloud backup is configured',
+        pending:'Saved changes are waiting for encrypted cloud backup',
+        saving:'Creating and uploading encrypted cloud backup',
+        error:localStorage.getItem('ioeCloudBackupLastError') || 'The last encrypted cloud backup failed'
+      }[mode] || 'Encrypted cloud backup');
+      const modalStatus = document.getElementById('cloudBackupModalStatus');
+      if (modalStatus) modalStatus.innerHTML = `<strong>Status:</strong> ${escapeHtml(button.title)}`;
+    }
+
+    function updateCloudBackupUi() {
+      const settings = getCloudBackupSettings();
+      if (!settings.token || !settings.owner || !settings.repo) {
+        setCloudBackupStatus('unconfigured');
+      } else if (!settings.password || settings.password.length < 8) {
+        setCloudBackupStatus('error','Encryption password is needed before automatic cloud backup can run.');
+      } else if (cloudBackupInProgress) {
+        setCloudBackupStatus('saving');
+      } else if (localStorage.getItem('ioeCloudBackupLastError')) {
+        setCloudBackupStatus('error');
+      } else if (cloudBackupDirty) {
+        setCloudBackupStatus('pending');
+      } else {
+        setCloudBackupStatus('ready');
+      }
+    }
+
+    function openCloudBackupModal() {
+      const settings = getCloudBackupSettings();
+      document.getElementById('cloudGitHubToken').value = settings.token;
+      document.getElementById('cloudGitHubOwner').value = settings.owner;
+      document.getElementById('cloudGitHubRepo').value = settings.repo;
+      document.getElementById('cloudGitHubBranch').value = settings.branch;
+      document.getElementById('cloudGitHubPath').value = settings.path;
+      document.getElementById('cloudBackupPassword').value = settings.password;
+      document.getElementById('cloudRememberPassword').checked = settings.rememberPassword;
+      document.getElementById('cloudAutoSaveEnabled').checked = settings.enabled;
+      updateCloudBackupUi();
+      document.getElementById('cloudBackupModal').classList.add('open');
+    }
+
+    function closeCloudBackupModal() {
+      document.getElementById('cloudBackupModal')?.classList.remove('open');
+    }
+
+    function readCloudBackupSettingsForm() {
+      return {
+        token:document.getElementById('cloudGitHubToken').value.trim(),
+        owner:document.getElementById('cloudGitHubOwner').value.trim(),
+        repo:document.getElementById('cloudGitHubRepo').value.trim(),
+        branch:document.getElementById('cloudGitHubBranch').value.trim() || 'main',
+        path:document.getElementById('cloudGitHubPath').value.trim().replace(/^\/+/, ''),
+        password:document.getElementById('cloudBackupPassword').value,
+        rememberPassword:document.getElementById('cloudRememberPassword').checked,
+        enabled:document.getElementById('cloudAutoSaveEnabled').checked
+      };
+    }
+
+    function validateCloudBackupSettings(settings) {
+      if (!settings.token || !settings.owner || !settings.repo || !settings.branch || !settings.path) throw new Error('Complete the token, owner, repository, branch and backup path.');
+      if (!/^[A-Za-z0-9_.-]+$/.test(settings.owner)) throw new Error('GitHub owner contains unsupported characters.');
+      if (!/^[A-Za-z0-9_.-]+$/.test(settings.repo)) throw new Error('GitHub repository name contains unsupported characters.');
+      if (settings.password.length < 8) throw new Error('Use an encryption password with at least 8 characters.');
+      if (!settings.path.endsWith('.ioebackup')) throw new Error('The cloud backup path must end with .ioebackup.');
+      return settings;
+    }
+
+    function persistCloudBackupSettings(settings) {
+      localStorage.setItem('ioeCloudGitHubToken', settings.token);
+      localStorage.setItem('ioeCloudGitHubOwner', settings.owner);
+      localStorage.setItem('ioeCloudGitHubRepo', settings.repo);
+      localStorage.setItem('ioeCloudGitHubBranch', settings.branch);
+      localStorage.setItem('ioeCloudGitHubPath', settings.path);
+      localStorage.setItem('ioeCloudAutoSaveEnabled', settings.enabled ? 'true' : 'false');
+      localStorage.setItem('ioeCloudRememberPassword', settings.rememberPassword ? 'true' : 'false');
+      cloudBackupSessionPassword = settings.password;
+      if (settings.rememberPassword) localStorage.setItem('ioeCloudBackupPassword', settings.password);
+      else localStorage.removeItem('ioeCloudBackupPassword');
+      localStorage.removeItem('ioeCloudBackupLastError');
+      updateCloudBackupUi();
+    }
+
+    function saveCloudBackupSettingsFromModal(closeAfter = true) {
+      try {
+        const settings = validateCloudBackupSettings(readCloudBackupSettingsForm());
+        persistCloudBackupSettings(settings);
+        if (closeAfter) closeCloudBackupModal();
+        showToast('Cloud backup settings saved',settings.enabled ? 'Saved changes will be encrypted and backed up automatically.' : 'Automatic cloud backup is turned off; Save now remains available.');
+        return settings;
+      } catch (error) {
+        showToast('Cloud settings incomplete',error.message);
+        return null;
+      }
+    }
+
+    function clearCloudBackupSettings() {
+      if (!confirm('Clear the GitHub token, encryption password and cloud backup settings from this browser? The encrypted file already stored in GitHub will not be deleted.')) return;
+      ['ioeCloudGitHubToken','ioeCloudGitHubOwner','ioeCloudGitHubRepo','ioeCloudGitHubBranch','ioeCloudGitHubPath','ioeCloudAutoSaveEnabled','ioeCloudRememberPassword','ioeCloudBackupPassword','ioeCloudBackupLastSavedAt','ioeCloudBackupLastError'].forEach(key => localStorage.removeItem(key));
+      cloudBackupSessionPassword = '';
+      cloudBackupDirty = false;
+      closeCloudBackupModal();
+      updateCloudBackupUi();
+      showToast('Cloud credentials cleared','The local Backup and Restore buttons are unchanged.');
+    }
+
+    function encodeGitHubPath(path) {
+      return String(path || '').split('/').filter(Boolean).map(segment => encodeURIComponent(segment)).join('/');
+    }
+
+    async function verifyPrivateGitHubRepository(settings) {
+      const response = await fetch(`https://api.github.com/repos/${encodeURIComponent(settings.owner)}/${encodeURIComponent(settings.repo)}`, {
+        headers:{ Authorization:`Bearer ${settings.token}`, Accept:'application/vnd.github+json' }
+      });
+      if (!response.ok) {
+        if (response.status === 401) throw new Error('GitHub rejected the token. Check the token and its repository access.');
+        if (response.status === 404) throw new Error('The backup repository was not found or the token cannot access it.');
+        throw new Error(`GitHub repository check failed (${response.status}).`);
+      }
+      const repo = await response.json();
+      if (!repo.private) throw new Error('The selected repository is public. Create or choose a private repository for encrypted event backups.');
+      return repo;
+    }
+
+    async function getGitHubFileSha(settings) {
+      const apiBase = `https://api.github.com/repos/${encodeURIComponent(settings.owner)}/${encodeURIComponent(settings.repo)}/contents/${encodeGitHubPath(settings.path)}`;
+      const response = await fetch(`${apiBase}?ref=${encodeURIComponent(settings.branch)}`, {
+        headers:{ Authorization:`Bearer ${settings.token}`, Accept:'application/vnd.github+json' }
+      });
+      if (response.status === 404) return null;
+      if (!response.ok) throw new Error(`Could not inspect the existing cloud backup (${response.status}).`);
+      const data = await response.json();
+      return data.sha || null;
+    }
+
+    async function saveEncryptedBackupToGitHub({ manual = false, settingsOverride = null } = {}) {
+      if (cloudBackupInProgress) return false;
+      const settings = settingsOverride || getCloudBackupSettings();
+      if (!cloudSettingsComplete(settings)) {
+        if (manual) openCloudBackupModal();
+        updateCloudBackupUi();
+        return false;
+      }
+      cloudBackupInProgress = true;
+      const revisionAtStart = cloudBackupRevision;
+      setCloudBackupStatus('saving');
+      const button = document.getElementById('cloudBackupNow');
+      if (button) button.disabled = true;
+      try {
+        await verifyPrivateGitHubRepository(settings);
+        const { envelope, files, missing } = await buildPortableBackupEnvelope(settings.password);
+        const json = JSON.stringify(envelope);
+        const bytes = new TextEncoder().encode(json);
+        if (bytes.byteLength > CLOUD_BACKUP_MAX_BYTES) throw new Error(`The encrypted cloud backup is ${formatFileSize(bytes.byteLength)}, which is too large for this prototype cloud-save feature. Use the local Backup button or reduce attached document size.`);
+        const encoded = bytesToBase64(bytes);
+        const sha = await getGitHubFileSha(settings);
+        const apiBase = `https://api.github.com/repos/${encodeURIComponent(settings.owner)}/${encodeURIComponent(settings.repo)}/contents/${encodeGitHubPath(settings.path)}`;
+        const response = await fetch(apiBase, {
+          method:'PUT',
+          headers:{ Authorization:`Bearer ${settings.token}`, Accept:'application/vnd.github+json', 'Content-Type':'application/json' },
+          body:JSON.stringify({
+            message:`Encrypted IO&E Event Hub backup - ${new Date().toISOString()}`,
+            content:encoded,
+            branch:settings.branch,
+            ...(sha ? { sha } : {})
+          })
+        });
+        if (!response.ok) {
+          const errorBody = await response.json().catch(() => ({}));
+          if (response.status === 401) throw new Error('GitHub rejected the token.');
+          if (response.status === 404) throw new Error('The repository, branch or backup path could not be accessed.');
+          if (response.status === 409) throw new Error('GitHub reported a save conflict. Try Save now again.');
+          throw new Error(errorBody.message || `GitHub upload failed (${response.status}).`);
+        }
+        const savedAt = new Date().toISOString();
+        localStorage.setItem('ioeCloudBackupLastSavedAt', savedAt);
+        localStorage.removeItem('ioeCloudBackupLastError');
+        if (revisionAtStart === cloudBackupRevision) cloudBackupDirty = false;
+        if (manual) showToast('Encrypted cloud backup saved',`${state.events.length} events, ${state.physicians.length} physicians and ${files.length} documents were copied to the private repository${missing.length ? `; ${missing.length} missing local file${missing.length === 1 ? ' was' : 's were'} excluded` : ''}.`);
+        return true;
+      } catch (error) {
+        console.error('Cloud backup failed', error);
+        localStorage.setItem('ioeCloudBackupLastError', error.message || 'Cloud backup failed.');
+        if (manual) showToast('Cloud backup failed',error.message || 'Check the GitHub settings and try again.');
+        return false;
+      } finally {
+        cloudBackupInProgress = false;
+        if (button) button.disabled = false;
+        updateCloudBackupUi();
+        if (cloudBackupDirty && getCloudBackupSettings().enabled) scheduleCloudBackupAfterChange();
+      }
+    }
+
+    function markCloudBackupPending() {
+      cloudBackupDirty = true;
+      cloudBackupRevision += 1;
+      localStorage.removeItem('ioeCloudBackupLastError');
+      updateCloudBackupUi();
+      scheduleCloudBackupAfterChange();
+    }
+
+    function scheduleCloudBackupAfterChange() {
+      const settings = getCloudBackupSettings();
+      if (!settings.enabled || !cloudSettingsComplete(settings)) return;
+      clearTimeout(cloudBackupDebounceTimer);
+      cloudBackupDebounceTimer = setTimeout(() => saveEncryptedBackupToGitHub({ manual:false }), CLOUD_BACKUP_DEBOUNCE_MS);
+    }
+
+    async function fetchLatestCloudBackupEnvelope(settings) {
+      await verifyPrivateGitHubRepository(settings);
+      const apiBase = `https://api.github.com/repos/${encodeURIComponent(settings.owner)}/${encodeURIComponent(settings.repo)}/contents/${encodeGitHubPath(settings.path)}`;
+      const contentResponse = await fetch(`${apiBase}?ref=${encodeURIComponent(settings.branch)}`, {
+        headers:{ Authorization:`Bearer ${settings.token}`, Accept:'application/vnd.github+json' }
+      });
+      if (contentResponse.status === 404) throw new Error('No encrypted cloud backup exists at the configured path yet.');
+      if (!contentResponse.ok) throw new Error(`Could not read the cloud backup (${contentResponse.status}).`);
+      const contentInfo = await contentResponse.json();
+      let encodedContent = String(contentInfo.content || '').replace(/\s/g, '');
+      if (!encodedContent && contentInfo.sha) {
+        const blobResponse = await fetch(`https://api.github.com/repos/${encodeURIComponent(settings.owner)}/${encodeURIComponent(settings.repo)}/git/blobs/${contentInfo.sha}`, {
+          headers:{ Authorization:`Bearer ${settings.token}`, Accept:'application/vnd.github+json' }
+        });
+        if (!blobResponse.ok) throw new Error(`Could not download the encrypted cloud backup (${blobResponse.status}).`);
+        const blobInfo = await blobResponse.json();
+        encodedContent = String(blobInfo.content || '').replace(/\s/g, '');
+      }
+      if (!encodedContent) throw new Error('The cloud backup file is empty or could not be decoded.');
+      const json = new TextDecoder().decode(base64ToBytes(encodedContent));
+      return JSON.parse(json);
+    }
+
+    async function restoreLatestCloudBackupFromModal() {
+      const settings = saveCloudBackupSettingsFromModal(false);
+      if (!settings) return false;
+      const button = document.getElementById('restoreCloudBackup');
+      const original = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Restoring...';
+      try {
+        const envelope = await fetchLatestCloudBackupEnvelope(settings);
+        let payload;
+        try {
+          payload = await decryptBackupEnvelope(envelope, settings.password);
+        } catch (error) {
+          throw new Error('The encryption password is incorrect, or the cloud backup is damaged.');
+        }
+        const restored = await applyRestoredBackupPayload(payload, 'latest encrypted cloud backup');
+        if (restored) closeCloudBackupModal();
+        return restored;
+      } catch (error) {
+        console.error(error);
+        showToast('Cloud restore failed',error.message || 'Check the repository and password.');
+        return false;
+      } finally {
+        button.disabled = false;
+        button.textContent = original;
+      }
+    }
+
+    function initializeCloudBackup() {
+      updateCloudBackupUi();
+      clearInterval(cloudBackupIntervalTimer);
+      cloudBackupIntervalTimer = setInterval(() => {
+        const settings = getCloudBackupSettings();
+        if (settings.enabled && cloudBackupDirty && cloudSettingsComplete(settings)) saveEncryptedBackupToGitHub({ manual:false });
+        else updateCloudBackupUi();
+      }, CLOUD_BACKUP_INTERVAL_MS);
+      if (cloudBackupDirty) scheduleCloudBackupAfterChange();
     }
 
     function downloadCsvFile(filename, headers, rows) {
@@ -3170,6 +3557,15 @@ Thank you.`;
       document.getElementById('loadSampleEmail')?.addEventListener('click',()=>{document.getElementById('emailBody').value=sampleEmail;showToast('Sample loaded','The example commercial email is ready to analyze.');});
       document.getElementById('analyzeEmail')?.addEventListener('click',analyzeEmailText);
       document.getElementById('exportCsv')?.addEventListener('click',exportCsv);
+      document.getElementById('cloudBackupNow')?.addEventListener('click',()=>{ if(cloudSettingsComplete()) saveEncryptedBackupToGitHub({manual:true}); else openCloudBackupModal(); });
+      document.getElementById('cloudBackupSettings')?.addEventListener('click',openCloudBackupModal);
+      document.getElementById('cloudBackupNavButton')?.addEventListener('click',()=>{ document.getElementById('sidebar')?.classList.remove('open'); openCloudBackupModal(); });
+      document.querySelectorAll('[data-close-cloud-modal]').forEach(button=>button.addEventListener('click',closeCloudBackupModal));
+      document.getElementById('cloudBackupModal')?.addEventListener('click',event=>{if(event.target.id==='cloudBackupModal')closeCloudBackupModal();});
+      document.getElementById('saveCloudBackupSettings')?.addEventListener('click',()=>saveCloudBackupSettingsFromModal(true));
+      document.getElementById('saveCloudBackupNowFromModal')?.addEventListener('click',async()=>{ const settings=saveCloudBackupSettingsFromModal(false); if(settings){ const ok=await saveEncryptedBackupToGitHub({manual:true,settingsOverride:settings}); if(ok) closeCloudBackupModal(); } });
+      document.getElementById('restoreCloudBackup')?.addEventListener('click',restoreLatestCloudBackupFromModal);
+      document.getElementById('clearCloudBackupSettings')?.addEventListener('click',clearCloudBackupSettings);
       document.getElementById('exportBackup')?.addEventListener('click',()=>openBackupPasswordModal('export'));
       document.getElementById('importBackup')?.addEventListener('click',()=>document.getElementById('restoreBackupInput')?.click());
       document.getElementById('restoreBackupInput')?.addEventListener('change',event=>{ const file=event.target.files?.[0]; if(file) openBackupPasswordModal('restore',file); });
@@ -3180,7 +3576,7 @@ Thank you.`;
       document.getElementById('printReport')?.addEventListener('click',()=>window.print());
       document.getElementById('saveSettings')?.addEventListener('click',saveSettingsFromUi);
       document.getElementById('resetDemo')?.addEventListener('click',resetDemoData);
-      document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeDrawer();closeNewEventModal();closePhysicianModal();closeBackupPasswordModal();document.getElementById('sidebar')?.classList.remove('open');}});
+      document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeDrawer();closeNewEventModal();closePhysicianModal();closeBackupPasswordModal();closeCloudBackupModal();document.getElementById('sidebar')?.classList.remove('open');}});
     }
 
     loadState();
@@ -3188,6 +3584,7 @@ Thank you.`;
     document.getElementById('emailBody').value=sampleEmail;
     initListeners();
     renderAll();
+    initializeCloudBackup();
   </script>
 </body>
 </html>
