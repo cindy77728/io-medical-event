@@ -1017,7 +1017,10 @@
   <aside class="drawer" id="eventDrawer" aria-hidden="true">
     <div class="drawer-header">
       <div class="drawer-title-wrap"><h2 id="drawerTitle">Event details</h2><p id="drawerSubtitle"></p></div>
-      <button class="icon-button" id="closeDrawer" aria-label="Close details"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto">
+        <button class="compact-button danger" id="deleteEntireEvent" aria-label="Delete entire event"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 10v7M14 10v7"/></svg>Delete event</button>
+        <button class="icon-button" id="closeDrawer" aria-label="Close details"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div>
     </div>
     <div class="drawer-scroll" id="drawerContent"></div>
   </aside>
@@ -2333,6 +2336,8 @@ Thank you.`;
         saveState(); renderAll(); openEvent(ev.id); showToast('Progress updated', `${ev.name} is now ${calculateProgress(ev)}% ready.`);
       }));
       const drawerRoot = document.getElementById('drawerContent');
+      const deleteEventButton = document.getElementById('deleteEntireEvent');
+      if (deleteEventButton) deleteEventButton.onclick = () => deleteEvent(event.id);
       bindPhysicianDocumentControls(drawerRoot);
       bindEventPresentationControls(drawerRoot);
       const toggleEventLocationFields = () => { const virtual = document.getElementById('eventDeliveryModeEdit')?.value === 'Virtual'; const inPerson = document.getElementById('eventInPersonFields'); const virtualFields = document.getElementById('eventVirtualFields'); if (inPerson) inPerson.hidden = virtual; if (virtualFields) virtualFields.hidden = !virtual; };
@@ -2391,6 +2396,20 @@ Thank you.`;
       else if(m.objective==='Done' && m.speakers==='Done' && (!facultyReady || m.honorarium!=='Done' || m.irf!=='Done' || (event.crossBorder&&m.crossBorder!=='Done'))) event.stage='Compliance';
       else if(m.brief==='Done' && (m.objective!=='Done'||m.speakers!=='Done'||!facultyReady||m.content!=='Done'||!presentationReady)) event.stage='Medical review';
       else event.stage='Intake';
+    }
+
+    async function deleteEvent(eventId) {
+      const event = state.events.find(item => item.id === eventId);
+      if (!event) return;
+      const confirmed = confirm(`Delete the entire event "${event.name}"? This permanently removes the event record, milestones, budget, sponsor, medical review, honorarium and locally stored presentation. Shared physician profiles, CVs, rate cards and agreements will remain in the physician library.`);
+      if (!confirmed) return;
+      const presentationStorageKey = event.presentation?.file?.storageKey || '';
+      state.events = state.events.filter(item => item.id !== eventId);
+      if (presentationStorageKey) await deleteFileBlob(presentationStorageKey).catch(() => {});
+      closeDrawer();
+      saveState();
+      renderAll();
+      showToast('Event deleted', `${event.name} was removed. Shared physician records were kept.`);
     }
 
     function closeDrawer() {
