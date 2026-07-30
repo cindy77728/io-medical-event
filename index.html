@@ -218,6 +218,7 @@
     .ghost-button { background: transparent; color: var(--teal); padding-inline: 9px; }
     .ghost-button:hover { background: var(--teal-2); }
     .danger-button { background: var(--red-2); color: var(--red); border-color: #f5c7c7; }
+    .backup-action { white-space: nowrap; }
     button svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
 
     .content { padding: 26px 32px 42px; }
@@ -733,8 +734,8 @@
       .milestone-owner { display: none; }
       .budget-row { grid-template-columns: 90px minmax(0,1fr); }
       .budget-values { grid-column: 2; text-align: left; }
-      .topbar-actions .primary-button span { display: none; }
-      .topbar-actions .primary-button { width: 42px; padding: 0; }
+      .topbar-actions .primary-button span, .topbar-actions .backup-action span { display: none; }
+      .topbar-actions .primary-button, .topbar-actions .backup-action { width: 42px; padding: 0; }
     }
     @media (max-width: 470px) {
       .kpi-grid { grid-template-columns: 1fr; }
@@ -821,6 +822,9 @@
             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
             <input id="globalSearch" type="search" placeholder="Search event, city, physician…" aria-label="Search events and physicians" />
           </div>
+          <button class="secondary-button backup-action" id="exportBackup" title="Download password-protected backup" aria-label="Download password-protected backup"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4"/><path d="M4 19h16"/></svg><span>Backup</span></button>
+          <button class="secondary-button backup-action" id="importBackup" title="Restore backup on this computer" aria-label="Restore backup on this computer"><svg viewBox="0 0 24 24"><path d="M12 21V9M8 13l4-4 4 4"/><path d="M4 5h16"/></svg><span>Restore</span></button>
+          <input id="restoreBackupInput" type="file" accept=".ioebackup,.json,application/json" hidden />
           <button class="icon-button" id="resetDemo" title="Reset demo data" aria-label="Reset demo data"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
           <button class="primary-button" id="newEventButton"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>New event</span></button>
         </div>
@@ -1115,6 +1119,26 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="backupPasswordModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="backupPasswordTitle">
+      <div class="modal-header">
+        <div class="modal-header-copy"><h2 id="backupPasswordTitle">Create portable backup</h2><p class="modal-subtitle" id="backupPasswordSubtitle">Protect the backup with a password before downloading it.</p></div>
+        <button class="icon-button" data-close-backup-modal aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="notice-banner" style="margin-bottom:14px">
+          <svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.7 8.1 7 10 4.3-1.9 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+          <div id="backupPasswordNotice"><strong>Password-protected file.</strong> The backup can contain event records, physician profiles, CVs, rate cards, contracts and presentation decks. Keep the file and password in an approved secure location.</div>
+        </div>
+        <div class="field" id="backupSelectedFileField" hidden><label>Selected backup</label><div class="input" id="backupSelectedFile" style="display:flex;align-items:center;overflow-wrap:anywhere;height:auto;min-height:48px;padding:10px 13px"></div></div>
+        <div class="field"><label for="backupPassword">Backup password *</label><input class="input" type="password" id="backupPassword" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" /></div>
+        <div class="field" id="backupPasswordConfirmField"><label for="backupPasswordConfirm">Confirm password *</label><input class="input" type="password" id="backupPasswordConfirm" autocomplete="new-password" minlength="8" placeholder="Re-enter the password" /></div>
+        <small class="field-help" id="backupPasswordHelp">The password cannot be recovered. You will need it to restore the backup on another computer.</small>
+      </div>
+      <div class="modal-footer"><button class="secondary-button" data-close-backup-modal>Cancel</button><button class="primary-button" id="backupPasswordSubmit">Create backup</button></div>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toastStack"></div>
 
   <script>
@@ -1335,11 +1359,16 @@ Thank you.`;
 
     let activeEventId = '';
     let physicianModalContextEventId = '';
+    let backupModalMode = 'export';
+    let pendingRestoreFile = null;
     const FILE_DB_NAME = 'ioeMedicalEventFileStore';
     const FILE_DB_VERSION = 1;
     const FILE_STORE_NAME = 'physicianCvs';
     const MAX_PHYSICIAN_FILE_SIZE = 15 * 1024 * 1024;
     const MAX_PRESENTATION_FILE_SIZE = 30 * 1024 * 1024;
+    const BACKUP_FORMAT = 'ioe-event-hub-encrypted-backup';
+    const BACKUP_VERSION = 1;
+    const BACKUP_KDF_ITERATIONS = 250000;
     const PHYSICIAN_DOCUMENT_TYPES = {
       cv: { property:'cv', label:'Curriculum vitae', shortLabel:'CV', extensions:['pdf','doc','docx'], accept:'.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document', help:'PDF, DOC or DOCX · up to 15 MB' },
       honorarium: { property:'honorariumFile', label:'Honorarium rate card', shortLabel:'Rate card', extensions:['pdf','doc','docx','xls','xlsx','csv','png','jpg','jpeg'], accept:'.pdf,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,image/png,image/jpeg', help:'PDF, Office file, CSV, PNG or JPG · up to 15 MB' },
@@ -1673,6 +1702,18 @@ Thank you.`;
     async function clearCvDatabase() {
       if (!window.indexedDB) return;
       await new Promise(resolve => { const request = indexedDB.deleteDatabase(FILE_DB_NAME); request.onsuccess = request.onerror = request.onblocked = resolve; });
+    }
+
+    async function clearFileStore() {
+      const db = await openFileDatabase();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(FILE_STORE_NAME, 'readwrite');
+        tx.objectStore(FILE_STORE_NAME).clear();
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error || new Error('Could not clear local document storage.'));
+        tx.onabort = () => reject(tx.error || new Error('Document storage reset was aborted.'));
+      });
+      db.close();
     }
 
     function formatFileSize(bytes) {
@@ -2820,6 +2861,237 @@ Thank you.`;
 
     function closeNewEventModal(){document.getElementById('newEventModal').classList.remove('open');}
 
+    function bytesToBase64(bytes) {
+      let binary = '';
+      const chunkSize = 0x8000;
+      for (let index = 0; index < bytes.length; index += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+      }
+      return btoa(binary);
+    }
+
+    function base64ToBytes(value) {
+      const binary = atob(String(value || ''));
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+      return bytes;
+    }
+
+    async function blobToBase64(blob) {
+      return bytesToBase64(new Uint8Array(await blob.arrayBuffer()));
+    }
+
+    function backupFileName() {
+      const date = new Date().toISOString().slice(0, 10);
+      return `ioe-event-hub-backup-${date}.ioebackup`;
+    }
+
+    function referencedDocumentMetadata() {
+      const items = [];
+      const add = meta => { if (meta?.storageKey && !items.some(item => item.storageKey === meta.storageKey)) items.push(meta); };
+      state.physicians.forEach(physician => { add(physician.cv); add(physician.honorariumFile); add(physician.contractFile); });
+      state.events.forEach(event => add(event.presentation?.file));
+      return items;
+    }
+
+    async function deriveBackupKey(password, salt, usage) {
+      const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+      return crypto.subtle.deriveKey(
+        { name:'PBKDF2', hash:'SHA-256', salt, iterations:BACKUP_KDF_ITERATIONS },
+        material,
+        { name:'AES-GCM', length:256 },
+        false,
+        [usage]
+      );
+    }
+
+    function validateBackupPayload(payload) {
+      if (!payload || typeof payload !== 'object') throw new Error('The backup payload is empty or invalid.');
+      if (!payload.state || !Array.isArray(payload.state.events) || !Array.isArray(payload.state.physicians)) throw new Error('The backup does not contain a valid event and physician register.');
+      if (!Array.isArray(payload.files)) throw new Error('The backup document list is invalid.');
+      payload.files.forEach(file => {
+        if (!file?.storageKey || typeof file.dataBase64 !== 'string') throw new Error('One or more backup documents are invalid.');
+      });
+      return payload;
+    }
+
+    function sanitizeBackupStateForFiles(backupState, includedStorageKeys) {
+      const keep = meta => meta?.storageKey && includedStorageKeys.has(meta.storageKey) ? meta : null;
+      backupState.physicians.forEach(physician => {
+        physician.cv = keep(physician.cv);
+        physician.honorariumFile = keep(physician.honorariumFile);
+        physician.contractFile = keep(physician.contractFile);
+      });
+      backupState.events.forEach(event => {
+        if (event.presentation) event.presentation.file = keep(event.presentation.file);
+      });
+      return backupState;
+    }
+
+    function openBackupPasswordModal(mode, file = null) {
+      backupModalMode = mode;
+      pendingRestoreFile = file;
+      const restoring = mode === 'restore';
+      document.getElementById('backupPasswordTitle').textContent = restoring ? 'Restore portable backup' : 'Create portable backup';
+      document.getElementById('backupPasswordSubtitle').textContent = restoring ? 'Enter the password used when this backup was created.' : 'Protect the backup with a password before downloading it.';
+      document.getElementById('backupPasswordNotice').innerHTML = restoring
+        ? '<strong>Local data will be replaced.</strong> After the password is verified, you will be asked to confirm replacing all records and documents saved in this browser.'
+        : '<strong>Password-protected file.</strong> The backup can contain event records, physician profiles, CVs, rate cards, contracts and presentation decks. Keep the file and password in an approved secure location.';
+      document.getElementById('backupPasswordConfirmField').hidden = restoring;
+      document.getElementById('backupSelectedFileField').hidden = !restoring;
+      document.getElementById('backupSelectedFile').textContent = file?.name || '';
+      document.getElementById('backupPasswordHelp').textContent = restoring ? 'The password is used only in this browser to decrypt the selected backup.' : 'The password cannot be recovered. You will need it to restore the backup on another computer.';
+      document.getElementById('backupPasswordSubmit').textContent = restoring ? 'Verify and restore' : 'Create backup';
+      document.getElementById('backupPassword').value = '';
+      document.getElementById('backupPasswordConfirm').value = '';
+      document.getElementById('backupPasswordModal').classList.add('open');
+      setTimeout(() => document.getElementById('backupPassword').focus(), 50);
+    }
+
+    function closeBackupPasswordModal() {
+      document.getElementById('backupPasswordModal').classList.remove('open');
+      document.getElementById('backupPassword').value = '';
+      document.getElementById('backupPasswordConfirm').value = '';
+      pendingRestoreFile = null;
+      const input = document.getElementById('restoreBackupInput');
+      if (input) input.value = '';
+    }
+
+    async function exportPortableBackup(password) {
+      if (!window.crypto?.subtle) { showToast('Backup unavailable','This browser does not support the encryption required for portable backups.'); return false; }
+      const button = document.getElementById('exportBackup');
+      if (button) button.disabled = true;
+      try {
+        const files = [];
+        const missing = [];
+        for (const meta of referencedDocumentMetadata()) {
+          const blob = await getFileBlob(meta.storageKey);
+          if (!blob) { missing.push(meta.name || meta.storageKey); continue; }
+          files.push({
+            storageKey:meta.storageKey,
+            name:meta.name || 'document',
+            type:meta.type || blob.type || 'application/octet-stream',
+            size:Number(meta.size || blob.size || 0),
+            uploadedAt:meta.uploadedAt || '',
+            lastModified:Number(blob.lastModified || 0),
+            dataBase64:await blobToBase64(blob)
+          });
+        }
+        const includedStorageKeys = new Set(files.map(file => file.storageKey));
+        const backupState = sanitizeBackupStateForFiles({ events:deepClone(state.events), physicians:deepClone(state.physicians), settings:deepClone(state.settings) }, includedStorageKeys);
+        const payload = {
+          app:'IO&E Medical Event Hub',
+          payloadVersion:1,
+          createdAt:new Date().toISOString(),
+          sourceOrigin:location.origin,
+          state:backupState,
+          files
+        };
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const key = await deriveBackupKey(password, salt, 'encrypt');
+        const encoded = new TextEncoder().encode(JSON.stringify(payload));
+        const encrypted = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, encoded));
+        const envelope = {
+          format:BACKUP_FORMAT,
+          version:BACKUP_VERSION,
+          createdAt:payload.createdAt,
+          encryption:{ algorithm:'AES-GCM', kdf:'PBKDF2-SHA-256', iterations:BACKUP_KDF_ITERATIONS, salt:bytesToBase64(salt), iv:bytesToBase64(iv) },
+          payload:bytesToBase64(encrypted)
+        };
+        const blob = new Blob([JSON.stringify(envelope)], { type:'application/json' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = backupFileName();
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('Password-protected backup downloaded',`${state.events.length} events, ${state.physicians.length} physicians and ${files.length} documents were included${missing.length ? `; ${missing.length} missing local file${missing.length === 1 ? ' was' : 's were'} excluded` : ''}.`);
+        return true;
+      } catch (error) {
+        console.error(error);
+        showToast('Backup could not be created',error?.message || 'Check browser storage and try again.');
+        return false;
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    async function decryptBackupEnvelope(envelope, password) {
+      if (envelope?.format !== BACKUP_FORMAT || Number(envelope?.version) !== BACKUP_VERSION) throw new Error('This is not a supported IO&E Event Hub backup.');
+      const salt = base64ToBytes(envelope.encryption?.salt);
+      const iv = base64ToBytes(envelope.encryption?.iv);
+      const encrypted = base64ToBytes(envelope.payload);
+      const key = await deriveBackupKey(password, salt, 'decrypt');
+      const decrypted = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, encrypted);
+      return validateBackupPayload(JSON.parse(new TextDecoder().decode(decrypted)));
+    }
+
+    async function restorePortableBackup(file, password) {
+      if (!file) return false;
+      if (!window.crypto?.subtle) { showToast('Restore unavailable','This browser does not support the encryption required for portable backups.'); return false; }
+      try {
+        const envelope = JSON.parse(await file.text());
+        let payload;
+        try {
+          payload = await decryptBackupEnvelope(envelope, password);
+        } catch (error) {
+          console.error(error);
+          showToast('Backup could not be opened','The password may be incorrect, or the backup file may be damaged.');
+          return false;
+        }
+        const created = payload.createdAt ? new Date(payload.createdAt).toLocaleString() : 'an unknown date';
+        const message = `Restore the backup created ${created}?\n\nThis will replace all records and locally stored documents currently saved in this browser. This action cannot be undone unless you create a backup first.`;
+        if (!confirm(message)) return true;
+
+        const decodedFiles = payload.files.map(item => ({
+          storageKey:item.storageKey,
+          blob:new File([base64ToBytes(item.dataBase64)], item.name || 'document', { type:item.type || 'application/octet-stream', lastModified:Number(item.lastModified || Date.now()) })
+        }));
+
+        await clearFileStore();
+        for (const item of decodedFiles) await putFileBlob(item.storageKey, item.blob);
+
+        state.events = deepClone(payload.state.events);
+        state.physicians = deepClone(payload.state.physicians);
+        state.settings = { ...defaultSettings, ...(payload.state.settings || {}), required:{ ...defaultSettings.required, ...(payload.state.settings?.required || {}) } };
+        state.lastExtraction = null;
+        migratePhysicianData();
+        saveState();
+        closeDrawer();
+        closeNewEventModal();
+        closePhysicianModal();
+        renderAll();
+        setView('portfolio');
+        showToast('Backup restored',`${state.events.length} events, ${state.physicians.length} physicians and ${decodedFiles.length} documents are now available on this computer.`);
+        return true;
+      } catch (error) {
+        console.error(error);
+        showToast('Restore failed',error?.message || 'The selected file is not a valid backup.');
+        return false;
+      }
+    }
+
+    async function submitBackupPassword() {
+      const password = document.getElementById('backupPassword').value;
+      const confirmation = document.getElementById('backupPasswordConfirm').value;
+      if (password.length < 8) { showToast('Stronger password required','Use at least 8 characters for the backup password.'); return; }
+      if (backupModalMode === 'export' && password !== confirmation) { showToast('Passwords do not match','Re-enter the same password in both fields.'); return; }
+      const submit = document.getElementById('backupPasswordSubmit');
+      submit.disabled = true;
+      const originalText = submit.textContent;
+      submit.textContent = backupModalMode === 'restore' ? 'Restoring…' : 'Creating…';
+      try {
+        const success = backupModalMode === 'restore' ? await restorePortableBackup(pendingRestoreFile, password) : await exportPortableBackup(password);
+        if (success) closeBackupPasswordModal();
+      } finally {
+        submit.disabled = false;
+        submit.textContent = originalText;
+      }
+    }
+
     function downloadCsvFile(filename, headers, rows) {
       const csv=[headers,...rows].map(row=>row.map(value=>`"${String(value??'').replace(/"/g,'""')}"`).join(',')).join('\n');
       const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
@@ -2898,10 +3170,17 @@ Thank you.`;
       document.getElementById('loadSampleEmail')?.addEventListener('click',()=>{document.getElementById('emailBody').value=sampleEmail;showToast('Sample loaded','The example commercial email is ready to analyze.');});
       document.getElementById('analyzeEmail')?.addEventListener('click',analyzeEmailText);
       document.getElementById('exportCsv')?.addEventListener('click',exportCsv);
+      document.getElementById('exportBackup')?.addEventListener('click',()=>openBackupPasswordModal('export'));
+      document.getElementById('importBackup')?.addEventListener('click',()=>document.getElementById('restoreBackupInput')?.click());
+      document.getElementById('restoreBackupInput')?.addEventListener('change',event=>{ const file=event.target.files?.[0]; if(file) openBackupPasswordModal('restore',file); });
+      document.querySelectorAll('[data-close-backup-modal]').forEach(button=>button.addEventListener('click',closeBackupPasswordModal));
+      document.getElementById('backupPasswordModal')?.addEventListener('click',event=>{if(event.target.id==='backupPasswordModal')closeBackupPasswordModal();});
+      document.getElementById('backupPasswordSubmit')?.addEventListener('click',submitBackupPassword);
+      ['backupPassword','backupPasswordConfirm'].forEach(id=>document.getElementById(id)?.addEventListener('keydown',event=>{if(event.key==='Enter')submitBackupPassword();}));
       document.getElementById('printReport')?.addEventListener('click',()=>window.print());
       document.getElementById('saveSettings')?.addEventListener('click',saveSettingsFromUi);
       document.getElementById('resetDemo')?.addEventListener('click',resetDemoData);
-      document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeDrawer();closeNewEventModal();closePhysicianModal();document.getElementById('sidebar')?.classList.remove('open');}});
+      document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeDrawer();closeNewEventModal();closePhysicianModal();closeBackupPasswordModal();document.getElementById('sidebar')?.classList.remove('open');}});
     }
 
     loadState();
