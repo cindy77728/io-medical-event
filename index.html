@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- BUILD: TEXT_BADGES_V2_2026-08-03 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -397,16 +398,19 @@
     tbody tr:last-child td { border-bottom: 0; }
     .event-cell { display: flex; align-items: center; gap: 11px; min-width: 220px; }
     .modality-mark {
-      width: 35px; height: 35px; border-radius: 10px; display: grid; place-items: center;
-      flex: 0 0 auto; font-size: 11px; font-weight: 850; letter-spacing: -.02em;
-      overflow: hidden; text-align: center; line-height: 1;
+      width: 54px; min-width: 54px; height: 42px; padding: 4px 5px; border-radius: 10px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 0 0 auto;
+      font-size: 11px; font-weight: 850; letter-spacing: .01em; text-transform: uppercase;
+      overflow: hidden; text-align: center; line-height: 1; white-space: normal;
+      overflow-wrap: normal; word-break: keep-all;
     }
-    .modality-mark svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+    .modality-mark .badge-line { display: block; width: 100%; white-space: nowrap; }
+    .modality-mark.compact-text { font-size: 9px; letter-spacing: 0; }
     .modality-y90 { background: var(--purple-2); color: var(--purple); }
     .modality-dc { background: var(--blue-2); color: var(--blue); }
     .modality-cryo { background: var(--teal-2); color: var(--teal); }
     .modality-other { background: var(--surface-3); color: var(--muted); }
-    .category-style-grid { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap:12px; }
+    .category-style-grid { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:12px; }
     .category-preview-row { display:flex; align-items:center; gap:11px; min-height:48px; padding:8px 11px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); }
     .category-preview-row strong { display:block; font-size:13px; }
     .category-preview-row small { display:block; margin-top:3px; color:var(--muted); font-size:12px; }
@@ -1061,7 +1065,7 @@
       <div class="modal-header"><h2 id="newEventModalTitle">Create a new event</h2><button class="icon-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
       <div class="modal-body">
         <div class="form-row"><div class="field"><label for="newEventName">Event name *</label><input class="input" id="newEventName" placeholder="e.g., Y-90 regional masterclass" /></div><div class="field"><label for="newEventModality">Event category *</label><input class="input" id="newEventModality" list="eventCategorySuggestions" value="Y-90" placeholder="e.g., Y-90, Workshop or Congress" /><datalist id="eventCategorySuggestions"></datalist></div></div>
-        <div class="category-style-grid"><div class="field"><label for="newEventCategoryIcon">Badge icon</label><select class="input" id="newEventCategoryIcon"></select></div><div class="field"><label for="newEventCategoryBadge">Badge text</label><input class="input" id="newEventCategoryBadge" maxlength="6" value="Y-90" placeholder="Up to 6 characters" /></div><div class="field"><label for="newEventCategoryColor">Badge color</label><select class="input" id="newEventCategoryColor"></select></div></div>
+        <div class="category-style-grid"><div class="field"><label for="newEventCategoryBadge">Badge text</label><input class="input" id="newEventCategoryBadge" maxlength="12" value="Y-90" placeholder="Up to 12 characters" /></div><div class="field"><label for="newEventCategoryColor">Badge color</label><select class="input" id="newEventCategoryColor"></select></div></div>
         <div class="category-preview-row" id="newEventCategoryPreview" aria-live="polite"></div>
         <div class="form-row" style="margin-top:13px"><div class="field"><label for="newEventStartDate">Start date</label><input class="input" type="date" id="newEventStartDate" /></div><div class="field"><label for="newEventEndDate">End date</label><input class="input" type="date" id="newEventEndDate" /></div></div>
         <div class="field"><label for="newEventDeliveryMode">Event format *</label><select class="input" id="newEventDeliveryMode"><option>In-person</option><option>Virtual</option></select></div>
@@ -2040,46 +2044,55 @@ Thank you.`;
 
     function categoryBadgeFromName(category) {
       const value = String(category || 'Other').trim();
-      if (value === 'Cryoablation') return 'CRYO';
-      if (value.length <= 6) return value.toUpperCase();
+      if (/cryoablation/i.test(value)) return 'CRYO';
+      if (value.length <= 12) return value.toUpperCase();
       const words = value.split(/\s+/).filter(Boolean);
-      if (words.length > 1) return words.map(word => word[0]).join('').slice(0, 6).toUpperCase();
-      return value.slice(0, 6).toUpperCase();
+      if (words.length > 1) return words.map(word => word[0]).join('').slice(0, 12).toUpperCase();
+      return value.slice(0, 12).toUpperCase();
     }
 
     function defaultCategoryAppearance(category) {
       const value = String(category || 'Other').trim();
-      if (/^y-?90$/i.test(value)) return { icon:'radiation', badge:'Y-90', color:'purple' };
-      if (/dc\s*bead/i.test(value)) return { icon:'beads', badge:'DC', color:'blue' };
-      if (/cryo/i.test(value)) return { icon:'snowflake', badge:'CRYO', color:'teal' };
-      if (/virtual|webinar|online/i.test(value)) return { icon:'virtual', badge:categoryBadgeFromName(value), color:'blue' };
-      if (/training|masterclass|workshop/i.test(value)) return { icon:'training', badge:categoryBadgeFromName(value), color:'green' };
-      if (/conference|congress|forum|roundtable/i.test(value)) return { icon:'conference', badge:categoryBadgeFromName(value), color:'amber' };
-      return { icon:'text', badge:categoryBadgeFromName(value), color:'gray' };
+      if (/^y-?90$/i.test(value)) return { badge:'Y-90', color:'purple' };
+      if (/dc\s*bead/i.test(value)) return { badge:'DC BEAD', color:'blue' };
+      if (/cryo/i.test(value)) return { badge:'CRYO', color:'teal' };
+      if (/virtual|webinar|online/i.test(value)) return { badge:categoryBadgeFromName(value), color:'blue' };
+      if (/training|masterclass|workshop/i.test(value)) return { badge:categoryBadgeFromName(value), color:'green' };
+      if (/conference|congress|forum|roundtable/i.test(value)) return { badge:categoryBadgeFromName(value), color:'amber' };
+      return { badge:categoryBadgeFromName(value), color:'gray' };
     }
 
     function normalizeEventCategory(event) {
       event.modality = String(event.modality || 'Other').trim() || 'Other';
       const defaults = defaultCategoryAppearance(event.modality);
-      event.categoryIcon = CATEGORY_ICONS[event.categoryIcon] !== undefined ? event.categoryIcon : defaults.icon;
-      event.categoryBadge = String(event.categoryBadge || defaults.badge).trim().slice(0, 6) || defaults.badge;
+      let badge = String(event.categoryBadge || defaults.badge).trim();
+      if (/dc\s*bead/i.test(event.modality) && /^dc$/i.test(badge)) badge = 'DC BEAD';
+      delete event.categoryIcon;
+      event.categoryBadge = badge.slice(0, 12) || defaults.badge;
       event.categoryColor = CATEGORY_COLORS[event.categoryColor] ? event.categoryColor : defaults.color;
       return event;
-    }
-
-    function categoryIconOptions(selected = 'text') {
-      return Object.entries(CATEGORY_ICON_LABELS).map(([value,label]) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('');
     }
 
     function categoryColorOptions(selected = 'gray') {
       return Object.entries(CATEGORY_COLORS).map(([value,config]) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${escapeHtml(config.label)}</option>`).join('');
     }
 
+    function categoryBadgeLines(value) {
+      const text = String(value || '').trim().toUpperCase().slice(0, 12);
+      if (!text) return ['OTHER'];
+      if (/^DC\s*BEAD$/i.test(text)) return ['DC', 'BEAD'];
+      const words = text.split(/\s+/).filter(Boolean);
+      if (words.length === 2 && text.length > 6) return words;
+      return [text];
+    }
+
     function categoryBadgeMarkup(eventLike) {
       const event = normalizeEventCategory({ ...eventLike });
       const palette = CATEGORY_COLORS[event.categoryColor] || CATEGORY_COLORS.gray;
-      const content = event.categoryIcon === 'text' ? escapeHtml(event.categoryBadge) : (CATEGORY_ICONS[event.categoryIcon] || escapeHtml(event.categoryBadge));
-      return `<div class="modality-mark" style="background:${palette.background};color:${palette.foreground}" title="${escapeHtml(event.modality)}" aria-label="Event category ${escapeHtml(event.modality)}">${content}</div>`;
+      const lines = categoryBadgeLines(event.categoryBadge);
+      const compact = lines.some(line => line.length > 7) ? ' compact-text' : '';
+      const lineMarkup = lines.map(line => `<span class="badge-line">${escapeHtml(line)}</span>`).join('');
+      return `<div class="modality-mark${compact}" style="background:${palette.background};color:${palette.foreground}" title="${escapeHtml(event.modality)}" aria-label="Event category ${escapeHtml(event.modality)}">${lineMarkup}</div>`;
     }
 
     function eventCategoryValues() {
@@ -2101,9 +2114,9 @@ Thank you.`;
       });
     }
 
-    function categoryPreviewMarkup(category, icon, badge, color) {
-      const preview = normalizeEventCategory({ modality:category, categoryIcon:icon, categoryBadge:badge, categoryColor:color });
-      return `${categoryBadgeMarkup(preview)}<div><strong>${escapeHtml(preview.modality)}</strong><small>${escapeHtml(CATEGORY_ICON_LABELS[preview.categoryIcon] || 'Text label')} · ${escapeHtml(CATEGORY_COLORS[preview.categoryColor]?.label || 'Gray')} badge</small></div>`;
+    function categoryPreviewMarkup(category, badge, color) {
+      const preview = normalizeEventCategory({ modality:category, categoryBadge:badge, categoryColor:color });
+      return `${categoryBadgeMarkup(preview)}<div><strong>${escapeHtml(preview.modality)}</strong><small>${escapeHtml(preview.categoryBadge)} · ${escapeHtml(CATEGORY_COLORS[preview.categoryColor]?.label || 'Gray')} badge</small></div>`;
     }
 
     function modalityClass(modality) {
@@ -2554,8 +2567,8 @@ Thank you.`;
         </div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Event details &amp; location</h3>${statusPill(eventFormatLabel(event))}</div><div class="drawer-section-body">
           <div class="form-row"><div class="field"><label for="eventNameEdit">Event name *</label><input class="input" id="eventNameEdit" value="${escapeHtml(event.name || '')}" /></div><div class="field"><label for="eventModalityEdit">Event category *</label><input class="input" id="eventModalityEdit" list="eventCategorySuggestions" value="${escapeHtml(event.modality || 'Other')}" placeholder="e.g., Y-90, Workshop or Congress" /></div></div>
-          <div class="category-style-grid"><div class="field"><label for="eventCategoryIconEdit">Badge icon</label><select class="input" id="eventCategoryIconEdit">${categoryIconOptions(event.categoryIcon)}</select></div><div class="field"><label for="eventCategoryBadgeEdit">Badge text</label><input class="input" id="eventCategoryBadgeEdit" maxlength="6" value="${escapeHtml(event.categoryBadge || '')}" placeholder="Up to 6 characters" /></div><div class="field"><label for="eventCategoryColorEdit">Badge color</label><select class="input" id="eventCategoryColorEdit">${categoryColorOptions(event.categoryColor)}</select></div></div>
-          <div class="category-preview-row" id="eventCategoryPreview">${categoryPreviewMarkup(event.modality,event.categoryIcon,event.categoryBadge,event.categoryColor)}</div>
+          <div class="category-style-grid"><div class="field"><label for="eventCategoryBadgeEdit">Badge text</label><input class="input" id="eventCategoryBadgeEdit" maxlength="12" value="${escapeHtml(event.categoryBadge || '')}" placeholder="Up to 12 characters" /></div><div class="field"><label for="eventCategoryColorEdit">Badge color</label><select class="input" id="eventCategoryColorEdit">${categoryColorOptions(event.categoryColor)}</select></div></div>
+          <div class="category-preview-row" id="eventCategoryPreview">${categoryPreviewMarkup(event.modality,event.categoryBadge,event.categoryColor)}</div>
           <div class="form-row" style="margin-top:13px"><div class="field"><label for="eventStartDateEdit">Start date</label><input class="input" type="date" id="eventStartDateEdit" value="${escapeHtml(eventStartDate(event))}" /></div><div class="field"><label for="eventEndDateEdit">End date</label><input class="input" type="date" id="eventEndDateEdit" value="${escapeHtml(eventEndDate(event))}" /></div></div>
           <div class="field"><label for="eventDeliveryModeEdit">Event format</label><select class="input" id="eventDeliveryModeEdit"><option ${eventIsVirtual(event)?'':'selected'}>In-person</option><option ${eventIsVirtual(event)?'selected':''}>Virtual</option></select></div>
           <div class="conditional-block" id="eventInPersonFields" ${eventIsVirtual(event)?'hidden':''}><div class="form-row"><div class="field"><label for="eventVenueEdit">Venue</label><input class="input" id="eventVenueEdit" value="${escapeHtml(event.venue || '')}" placeholder="Hospital, hotel or convention center" /></div><div class="field"><label for="eventCityEdit">City</label><input class="input" id="eventCityEdit" value="${escapeHtml(event.city || '')}" /></div></div><div class="field"><label for="eventCountryEdit">Country / market</label><input class="input" id="eventCountryEdit" value="${escapeHtml(event.country || '')}" /></div></div>
@@ -2598,23 +2611,21 @@ Thank you.`;
       document.getElementById('eventDeliveryModeEdit')?.addEventListener('change', toggleEventLocationFields);
       const syncEventCategoryPreview = (useDefaults = false) => {
         const categoryInput = document.getElementById('eventModalityEdit');
-        const iconInput = document.getElementById('eventCategoryIconEdit');
         const badgeInput = document.getElementById('eventCategoryBadgeEdit');
         const colorInput = document.getElementById('eventCategoryColorEdit');
         const preview = document.getElementById('eventCategoryPreview');
-        if (!categoryInput || !iconInput || !badgeInput || !colorInput || !preview) return;
+        if (!categoryInput || !badgeInput || !colorInput || !preview) return;
         const category = categoryInput.value.trim() || 'Other';
         if (useDefaults) {
           const defaults = defaultCategoryAppearance(category);
-          iconInput.value = defaults.icon;
           badgeInput.value = defaults.badge;
           colorInput.value = defaults.color;
         }
-        preview.innerHTML = categoryPreviewMarkup(category, iconInput.value, badgeInput.value, colorInput.value);
+        preview.innerHTML = categoryPreviewMarkup(category, badgeInput.value, colorInput.value);
       };
       document.getElementById('eventModalityEdit')?.addEventListener('change', () => syncEventCategoryPreview(true));
       document.getElementById('eventModalityEdit')?.addEventListener('input', () => syncEventCategoryPreview(false));
-      ['eventCategoryIconEdit','eventCategoryBadgeEdit','eventCategoryColorEdit'].forEach(id => document.getElementById(id)?.addEventListener('input', () => syncEventCategoryPreview(false)));
+      ['eventCategoryBadgeEdit','eventCategoryColorEdit'].forEach(id => document.getElementById(id)?.addEventListener('input', () => syncEventCategoryPreview(false)));
       const syncEventDateRangeInputs = () => {
         const startInput = document.getElementById('eventStartDateEdit');
         const endInput = document.getElementById('eventEndDateEdit');
@@ -2635,8 +2646,7 @@ Thank you.`;
         if (startDate && endDate < startDate) { showToast('Date range is invalid','The end date cannot be earlier than the start date.'); return; }
         event.name = updatedName;
         event.modality = updatedCategory;
-        event.categoryIcon = document.getElementById('eventCategoryIconEdit')?.value || defaultCategoryAppearance(updatedCategory).icon;
-        event.categoryBadge = (document.getElementById('eventCategoryBadgeEdit')?.value.trim() || defaultCategoryAppearance(updatedCategory).badge).slice(0, 6);
+        event.categoryBadge = (document.getElementById('eventCategoryBadgeEdit')?.value.trim() || defaultCategoryAppearance(updatedCategory).badge).slice(0, 12);
         event.categoryColor = document.getElementById('eventCategoryColorEdit')?.value || defaultCategoryAppearance(updatedCategory).color;
         normalizeEventCategory(event);
         event.startDate = startDate;
@@ -3107,8 +3117,7 @@ Thank you.`;
       if(!name){showToast('Event name required','Enter a name before creating the draft.');return;}
       if(!modality){showToast('Event category required','Enter an event category before creating the draft.');return;}
       const categoryDefaults=defaultCategoryAppearance(modality);
-      const categoryIcon=document.getElementById('newEventCategoryIcon')?.value || categoryDefaults.icon;
-      const categoryBadge=(document.getElementById('newEventCategoryBadge')?.value.trim() || categoryDefaults.badge).slice(0,6);
+      const categoryBadge=(document.getElementById('newEventCategoryBadge')?.value.trim() || categoryDefaults.badge).slice(0,12);
       const categoryColor=document.getElementById('newEventCategoryColor')?.value || categoryDefaults.color;
       const deliveryMode=document.getElementById('newEventDeliveryMode').value || 'In-person';
       const startDate=document.getElementById('newEventStartDate').value;
@@ -3120,7 +3129,7 @@ Thank you.`;
       const country=document.getElementById('newEventCountry').value.trim();
       const virtualPlatform=document.getElementById('newEventVirtualPlatform').value.trim();
       if(deliveryMode==='In-person' && !(venue||city||country)){showToast('Location required','Enter the venue, city or country for an in-person event.');return;}
-      const event={id:`EVT-${String(new Date().getFullYear()).slice(-2)}${String(Math.floor(Math.random()*900)+100)}`,name,modality,categoryIcon,categoryBadge,categoryColor,stage:'Intake',date:startDate,startDate,endDate,deliveryMode,venue,city,country,virtualPlatform,owner:document.getElementById('newEventOwner').value.trim()||'Unassigned',medicalOwner:'Unassigned',attendees:0,audience:'Not defined',speakers:[],physicianIds:[],honorarium:{amount:0,currency:state.settings.currency,status:'Not scoped',details:''},presentation:{file:null,reviewStatus:'Not uploaded',version:'',reviewOwner:'',reviewDueDate:'',reviewComments:'',approvedBy:'',approvalDate:''},budget:{planned:Number(document.getElementById('newEventBudget').value)||0,committed:0,actual:0},sponsors:[],irf:{required:true,id:'',status:'Not started'},crossBorder:document.getElementById('newEventCrossBorder').checked,medical:{status:'Needed',needed:true,due:'',reason:'New event requires Medical review of the objective, audience, topics, faculty rationale and presentation deck.',topics:defaultTopics(modality)},objective:document.getElementById('newEventObjective').value.trim()||'Objective pending Medical review.',sourceEmail:'Created manually in the event tracker.',lastUpdate:new Date().toISOString().slice(0,10),milestones:{brief:'In progress',objective:'Not started',dateLocation:startDate && (deliveryMode==='Virtual'||venue||city||country)?'In progress':'Not started',attendees:'Not started',speakers:'Not started',physicianCv:'N/A',physicianAgreement:'N/A',honorarium:'Not started',budget:Number(document.getElementById('newEventBudget').value)?'In progress':'Not started',sponsor:'N/A',irf:'Not started',crossBorder:document.getElementById('newEventCrossBorder').checked?'Not started':'N/A',content:'Not started',presentation:'Not started',execution:'Not started',closeout:'Not started'}};
+      const event={id:`EVT-${String(new Date().getFullYear()).slice(-2)}${String(Math.floor(Math.random()*900)+100)}`,name,modality,categoryBadge,categoryColor,stage:'Intake',date:startDate,startDate,endDate,deliveryMode,venue,city,country,virtualPlatform,owner:document.getElementById('newEventOwner').value.trim()||'Unassigned',medicalOwner:'Unassigned',attendees:0,audience:'Not defined',speakers:[],physicianIds:[],honorarium:{amount:0,currency:state.settings.currency,status:'Not scoped',details:''},presentation:{file:null,reviewStatus:'Not uploaded',version:'',reviewOwner:'',reviewDueDate:'',reviewComments:'',approvedBy:'',approvalDate:''},budget:{planned:Number(document.getElementById('newEventBudget').value)||0,committed:0,actual:0},sponsors:[],irf:{required:true,id:'',status:'Not started'},crossBorder:document.getElementById('newEventCrossBorder').checked,medical:{status:'Needed',needed:true,due:'',reason:'New event requires Medical review of the objective, audience, topics, faculty rationale and presentation deck.',topics:defaultTopics(modality)},objective:document.getElementById('newEventObjective').value.trim()||'Objective pending Medical review.',sourceEmail:'Created manually in the event tracker.',lastUpdate:new Date().toISOString().slice(0,10),milestones:{brief:'In progress',objective:'Not started',dateLocation:startDate && (deliveryMode==='Virtual'||venue||city||country)?'In progress':'Not started',attendees:'Not started',speakers:'Not started',physicianCv:'N/A',physicianAgreement:'N/A',honorarium:'Not started',budget:Number(document.getElementById('newEventBudget').value)?'In progress':'Not started',sponsor:'N/A',irf:'Not started',crossBorder:document.getElementById('newEventCrossBorder').checked?'Not started':'N/A',content:'Not started',presentation:'Not started',execution:'Not started',closeout:'Not started'}};
       state.events.unshift(event); saveState(); renderAll(); closeNewEventModal(); setView('events'); showToast('Draft created',`${name} is ready for intake.`); setTimeout(()=>openEvent(event.id),250);
     }
 
@@ -3725,23 +3734,20 @@ Thank you.`;
       const toggleNewEventLocationFields = () => { const virtual = document.getElementById('newEventDeliveryMode')?.value === 'Virtual'; const inPerson = document.getElementById('newEventInPersonFields'); const virtualFields = document.getElementById('newEventVirtualFields'); if(inPerson) inPerson.hidden=virtual; if(virtualFields) virtualFields.hidden=!virtual; };
       const syncNewEventCategoryPreview = (useDefaults = false) => {
         const category=document.getElementById('newEventModality');
-        const icon=document.getElementById('newEventCategoryIcon');
         const badge=document.getElementById('newEventCategoryBadge');
         const color=document.getElementById('newEventCategoryColor');
         const preview=document.getElementById('newEventCategoryPreview');
-        if(!category||!icon||!badge||!color||!preview)return;
+        if(!category||!badge||!color||!preview)return;
         const categoryValue=category.value.trim()||'Other';
-        if(useDefaults){ const defaults=defaultCategoryAppearance(categoryValue); icon.value=defaults.icon; badge.value=defaults.badge; color.value=defaults.color; }
-        preview.innerHTML=categoryPreviewMarkup(categoryValue,icon.value,badge.value,color.value);
+        if(useDefaults){ const defaults=defaultCategoryAppearance(categoryValue); badge.value=defaults.badge; color.value=defaults.color; }
+        preview.innerHTML=categoryPreviewMarkup(categoryValue,badge.value,color.value);
       };
       const syncNewEventDateRange = () => { const start=document.getElementById('newEventStartDate'); const end=document.getElementById('newEventEndDate'); if(!start||!end)return; end.min=start.value||''; if(start.value&&(!end.value||end.value<start.value))end.value=start.value; };
-      const newCategoryIcon=document.getElementById('newEventCategoryIcon');
       const newCategoryColor=document.getElementById('newEventCategoryColor');
-      if(newCategoryIcon) newCategoryIcon.innerHTML=categoryIconOptions('radiation');
       if(newCategoryColor) newCategoryColor.innerHTML=categoryColorOptions('purple');
       document.getElementById('newEventModality')?.addEventListener('change',()=>syncNewEventCategoryPreview(true));
       document.getElementById('newEventModality')?.addEventListener('input',()=>syncNewEventCategoryPreview(false));
-      ['newEventCategoryIcon','newEventCategoryBadge','newEventCategoryColor'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>syncNewEventCategoryPreview(false)));
+      ['newEventCategoryBadge','newEventCategoryColor'].forEach(id=>document.getElementById(id)?.addEventListener('input',()=>syncNewEventCategoryPreview(false)));
       document.getElementById('newEventDeliveryMode')?.addEventListener('change',toggleNewEventLocationFields);
       document.getElementById('newEventStartDate')?.addEventListener('change',syncNewEventDateRange);
       document.getElementById('newEventButton')?.addEventListener('click',()=>{refreshCategoryControls();document.getElementById('newEventModal')?.classList.add('open');toggleNewEventLocationFields();syncNewEventCategoryPreview(false);syncNewEventDateRange();});
