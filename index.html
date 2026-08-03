@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex,nofollow" />
   <meta name="description" content="Prototype UI for tracking IO&E medical events, delivery format, physician CVs, honorarium schedules, agreements, presentation review and approval, IRF, compliance, budgets and sponsors." />
-  <title>IO&E Medical Event Hub</title>
+  <title>IO&E Medical Event Hub · Event Date Ranges</title>
   <style>
     /* Large-text accessibility update: all interface labels increased for readability. */
     :root {
@@ -896,7 +896,7 @@
               </select>
             </div>
           </div>
-          <div class="panel"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Date &amp; location</th><th>Stage</th><th>Readiness</th><th>Owner</th><th>Budget</th><th>Risk</th></tr></thead><tbody id="upcomingTable"></tbody></table></div></div>
+          <div class="panel"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Dates &amp; location</th><th>Stage</th><th>Readiness</th><th>Owner</th><th>Budget</th><th>Risk</th></tr></thead><tbody id="upcomingTable"></tbody></table></div></div>
         </section>
 
         <section class="view" id="view-events">
@@ -912,7 +912,7 @@
             </div>
             <input class="text-control" id="eventTableSearch" placeholder="Filter this list…" />
           </div>
-          <div class="panel"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Date &amp; location</th><th>Stage</th><th>Medical</th><th>IRF</th><th>Cross-border</th><th>Speakers / attendees</th><th>Budget</th><th>Readiness</th><th>Risk</th></tr></thead><tbody id="allEventsTable"></tbody></table></div></div>
+          <div class="panel"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Dates &amp; location</th><th>Stage</th><th>Medical</th><th>IRF</th><th>Cross-border</th><th>Speakers / attendees</th><th>Budget</th><th>Readiness</th><th>Risk</th></tr></thead><tbody id="allEventsTable"></tbody></table></div></div>
         </section>
 
         <section class="view" id="view-physicians">
@@ -1057,7 +1057,8 @@
       <div class="modal-header"><h2 id="newEventModalTitle">Create a new event</h2><button class="icon-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
       <div class="modal-body">
         <div class="form-row"><div class="field"><label for="newEventName">Event name *</label><input class="input" id="newEventName" placeholder="e.g., Y-90 regional masterclass" /></div><div class="field"><label for="newEventModality">Modality *</label><select class="input" id="newEventModality"><option>Y-90</option><option>DC Bead</option><option>Cryoablation</option><option>Other</option></select></div></div>
-        <div class="form-row"><div class="field"><label for="newEventDate">Proposed date</label><input class="input" type="date" id="newEventDate" /></div><div class="field"><label for="newEventDeliveryMode">Event format *</label><select class="input" id="newEventDeliveryMode"><option>In-person</option><option>Virtual</option></select></div></div>
+        <div class="form-row"><div class="field"><label for="newEventStartDate">Start date</label><input class="input" type="date" id="newEventStartDate" /></div><div class="field"><label for="newEventEndDate">End date</label><input class="input" type="date" id="newEventEndDate" /></div></div>
+        <div class="field"><label for="newEventDeliveryMode">Event format *</label><select class="input" id="newEventDeliveryMode"><option>In-person</option><option>Virtual</option></select></div>
         <div class="conditional-block" id="newEventInPersonFields">
           <div class="form-row"><div class="field"><label for="newEventVenue">Venue</label><input class="input" id="newEventVenue" placeholder="Hospital, hotel or convention center" /></div><div class="field"><label for="newEventCity">City *</label><input class="input" id="newEventCity" placeholder="City" /></div></div>
           <div class="field"><label for="newEventCountry">Country / market *</label><input class="input" id="newEventCountry" placeholder="Country or market" /></div>
@@ -1219,7 +1220,7 @@
     const milestoneTemplate = [
       { key: 'brief', name: 'Commercial brief received', owner: 'Commercial' },
       { key: 'objective', name: 'Medical / educational objective', owner: 'Medical' },
-      { key: 'dateLocation', name: 'Date and location confirmed', owner: 'Operations' },
+      { key: 'dateLocation', name: 'Event date range and location confirmed', owner: 'Operations' },
       { key: 'attendees', name: 'Audience and attendee estimate', owner: 'Commercial' },
       { key: 'speakers', name: 'Speakers identified and vetted', owner: 'Medical' },
       { key: 'physicianCv', name: 'Current physician CVs on file', owner: 'Medical / Compliance' },
@@ -1564,20 +1565,21 @@ Thank you.`;
 
     function agreementStateForEvent(physician, event) {
       const base = agreementState(physician);
-      if (!event?.date || !physician?.agreement) return base;
-      const eventDate = String(event.date);
+      const startDate = eventStartDate(event);
+      const endDate = eventEndDate(event);
+      if (!startDate || !physician?.agreement) return base;
       const effectiveDate = String(physician.agreement.effectiveDate || '');
       const expiryDate = String(physician.agreement.expiryDate || '');
       const hasFile = Boolean(physician.contractFile?.storageKey);
       if (!expiryDate || !hasFile) return { ...base, eventInvalid:false };
-      if (effectiveDate && eventDate < effectiveDate) {
-        return { ...base, label:'Not effective for event', tone:'red', complete:false, eventInvalid:true, detail:`Agreement starts ${formatDate(effectiveDate)}, after the event on ${formatDate(eventDate)}.` };
+      if (effectiveDate && startDate < effectiveDate) {
+        return { ...base, label:'Not effective for event', tone:'red', complete:false, eventInvalid:true, detail:`Agreement starts ${formatDate(effectiveDate)}, after the event begins on ${formatDate(startDate)}.` };
       }
-      if (eventDate > expiryDate) {
-        return { ...base, label:'Expires before event', tone:'red', complete:false, eventInvalid:true, detail:`Agreement expires ${formatDate(expiryDate)}, before the event on ${formatDate(eventDate)}.` };
+      if (endDate > expiryDate) {
+        return { ...base, label:'Expires during event', tone:'red', complete:false, eventInvalid:true, detail:`Agreement expires ${formatDate(expiryDate)}, before the event ends on ${formatDate(endDate)}.` };
       }
       const reminderDays = Math.max(1, Number(state.settings.agreementReminderDays) || 90);
-      const daysFromEventToExpiry = Math.ceil((new Date(`${expiryDate}T12:00:00`) - new Date(`${eventDate}T12:00:00`)) / 86400000);
+      const daysFromEventToExpiry = Math.ceil((new Date(`${expiryDate}T12:00:00`) - new Date(`${endDate}T12:00:00`)) / 86400000);
       const nearEventExpiry = daysFromEventToExpiry <= reminderDays;
       return {
         ...base,
@@ -1587,7 +1589,7 @@ Thank you.`;
         expiring:nearEventExpiry,
         expired:false,
         eventInvalid:false,
-        detail:`Valid on ${formatDate(eventDate)} · expires ${formatDate(expiryDate)}`
+        detail:`Valid for ${formatEventDateRange(event)} · expires ${formatDate(expiryDate)}`
       };
     }
 
@@ -1632,7 +1634,7 @@ Thank you.`;
     function eventIsVirtual(event) { return String(event?.deliveryMode || '').toLowerCase() === 'virtual'; }
 
     function eventLogisticsReady(event) {
-      if (!event?.date) return false;
+      if (!eventStartDate(event)) return false;
       if (eventIsVirtual(event)) return true;
       return Boolean(event.venue || event.city || event.country);
     }
@@ -1683,6 +1685,7 @@ Thank you.`;
         event.irf = { required:true, id:'', status:'Not started', ...(event.irf || event['ifr'] || {}) };
         event.milestones = event.milestones || {};
         if (event.milestones.irf === undefined && event.milestones['ifr'] !== undefined) event.milestones.irf = event.milestones['ifr'];
+        normalizeEventDateRange(event);
         event.deliveryMode = event.deliveryMode || (event.virtual ? 'Virtual' : 'In-person');
         event.venue = event.venue || '';
         event.virtualPlatform = event.virtualPlatform || '';
@@ -1951,6 +1954,47 @@ Thank you.`;
       return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', ...(includeYear ? {year:'numeric'} : {}) });
     }
 
+    function eventStartDate(event) {
+      return String(event?.startDate || event?.date || '');
+    }
+
+    function eventEndDate(event) {
+      return String(event?.endDate || event?.startDate || event?.date || '');
+    }
+
+    function normalizeEventDateRange(event) {
+      if (!event) return event;
+      const startDate = eventStartDate(event);
+      let endDate = eventEndDate(event);
+      if (startDate && (!endDate || endDate < startDate)) endDate = startDate;
+      event.startDate = startDate;
+      event.endDate = endDate;
+      event.date = startDate;
+      return event;
+    }
+
+    function formatEventDateRange(event, includeYear = true) {
+      const start = eventStartDate(event);
+      const end = eventEndDate(event);
+      if (!start) return 'TBD';
+      if (!end || end === start) return formatDate(start, includeYear);
+      const startValue = new Date(`${start}T12:00:00`);
+      const endValue = new Date(`${end}T12:00:00`);
+      if (Number.isNaN(startValue.getTime()) || Number.isNaN(endValue.getTime())) return `${start} – ${end}`;
+      const sameYear = startValue.getFullYear() === endValue.getFullYear();
+      const sameMonth = sameYear && startValue.getMonth() === endValue.getMonth();
+      if (sameMonth) {
+        const month = startValue.toLocaleDateString('en-US', { month:'short' });
+        return `${startValue.getDate()}–${endValue.getDate()} ${month}${includeYear ? ` ${startValue.getFullYear()}` : ''}`;
+      }
+      if (sameYear) {
+        const startText = startValue.toLocaleDateString('en-US', { day:'numeric', month:'short' });
+        const endText = endValue.toLocaleDateString('en-US', { day:'numeric', month:'short', ...(includeYear ? { year:'numeric' } : {}) });
+        return `${startText} – ${endText}`;
+      }
+      return `${formatDate(start, includeYear)} – ${formatDate(end, includeYear)}`;
+    }
+
     function formatMoney(value, currency = 'USD', compact = false) {
       const amount = Number(value || 0);
       try {
@@ -2011,8 +2055,9 @@ Thank you.`;
 
     function deriveRisk(event) {
       const reasons = [];
-      const days = daysUntil(event.date);
-      if (days < 0 && event.milestones?.closeout !== 'Done') reasons.push({ severity:'Medium', text:'Post-event close-out is still open.' });
+      const days = daysUntil(eventStartDate(event));
+      const daysFromEnd = daysUntil(eventEndDate(event));
+      if (daysFromEnd < 0 && event.milestones?.closeout !== 'Done') reasons.push({ severity:'Medium', text:'Post-event close-out is still open.' });
       if (days >= 0 && days <= 45 && event.irf?.required && event.irf?.status !== 'Approved') reasons.push({ severity:'High', text:'IRF / funding approval is incomplete within 45 days of the event.' });
       if (event.crossBorder && event.milestones?.crossBorder !== 'Done') reasons.push({ severity: days <= 60 ? 'High' : 'Medium', text:'Cross-border review is not complete.' });
       if (event.speakers?.length && !['Approved','Paid'].includes(event.honorarium?.status) && event.milestones?.honorarium !== 'Done') reasons.push({ severity:'Medium', text:'Event-specific honorarium or payment approval is incomplete.' });
@@ -2020,7 +2065,7 @@ Thank you.`;
       if (documents.total && documents.missingCv) reasons.push({ severity: days <= 45 ? 'High' : 'Medium', text:`${documents.missingCv} of ${documents.total} physician CV${documents.total === 1 ? '' : 's'} ${documents.missingCv === 1 ? 'is' : 'are'} missing.` });
       if (documents.total && documents.missingRates) reasons.push({ severity: days <= 45 ? 'High' : 'Medium', text:`Honorarium schedule is missing for ${documents.missingRates} physician${documents.missingRates === 1 ? '' : 's'}.` });
       if (documents.expired) reasons.push({ severity:'High', text:`${documents.expired} assigned physician agreement${documents.expired === 1 ? ' has' : 's have'} expired.` });
-      if (documents.invalidForEvent) reasons.push({ severity:'High', text:`${documents.invalidForEvent} physician agreement${documents.invalidForEvent === 1 ? ' is' : 's are'} not valid on the event date.` });
+      if (documents.invalidForEvent) reasons.push({ severity:'High', text:`${documents.invalidForEvent} physician agreement${documents.invalidForEvent === 1 ? ' is' : 's are'} not valid for the full event date range.` });
       const incompleteNotExpired = Math.max(documents.missingAgreement - documents.expired - documents.invalidForEvent, 0);
       if (incompleteNotExpired) reasons.push({ severity: days <= 60 ? 'High' : 'Medium', text:`Agreement file or expiry date is incomplete for ${incompleteNotExpired} physician${incompleteNotExpired === 1 ? '' : 's'}.` });
       if (documents.expiring) reasons.push({ severity:'Medium', text:`${documents.expiring} physician agreement${documents.expiring === 1 ? ' expires' : 's expire'} within ${Number(state.settings.agreementReminderDays) || 90} days.` });
@@ -2081,7 +2126,7 @@ Thank you.`;
       const actions = [];
       state.events.forEach(event => {
         const risk = deriveRisk(event);
-        risk.reasons.forEach(reason => actions.push({ event, severity: reason.severity, text: reason.text, due: event.medical?.due || event.date }));
+        risk.reasons.forEach(reason => actions.push({ event, severity: reason.severity, text: reason.text, due: event.medical?.due || eventStartDate(event) }));
       });
       const rank = {High:0,Medium:1,Low:2};
       return actions.sort((a,b) => rank[a.severity]-rank[b.severity] || String(a.due).localeCompare(String(b.due))).slice(0,6);
@@ -2099,7 +2144,7 @@ Thank you.`;
       const risk = deriveRisk(event);
       const coverage = physicianDocumentCoverage(event);
       const location = eventLocation(event);
-      const common = `<td><div class="event-cell"><div class="modality-mark ${modalityClass(event.modality)}">${modalityShort(event.modality)}</div><div><div class="event-name">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.id)} · ${escapeHtml(event.modality)}</div></div></div></td><td><div class="event-name">${formatDate(event.date)}</div><div class="event-sub">${escapeHtml(location)}</div><div class="delivery-badge">${escapeHtml(eventFormatLabel(event))}</div></td><td>${statusPill(event.stage)}</td>`;
+      const common = `<td><div class="event-cell"><div class="modality-mark ${modalityClass(event.modality)}">${modalityShort(event.modality)}</div><div><div class="event-name">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.id)} · ${escapeHtml(event.modality)}</div></div></div></td><td><div class="event-name">${formatEventDateRange(event)}</div><div class="event-sub">${escapeHtml(location)}</div><div class="delivery-badge">${escapeHtml(eventFormatLabel(event))}</div></td><td>${statusPill(event.stage)}</td>`;
       if (detailed) {
         return `<tr data-event-id="${event.id}">${common}<td>${statusPill(event.medical?.status || 'Not started')}</td><td>${statusPill(event.irf?.status || 'Not started')}<div class="event-sub">${escapeHtml(event.irf?.id || 'No reference')}</div></td><td>${event.crossBorder ? '<span class="pill amber">Yes</span>' : '<span class="pill gray">No</span>'}</td><td><div class="event-name">${event.speakers?.length || 0} / ${event.attendees || 'TBD'}</div><div class="event-sub">speakers / attendees · CV ${coverage.cvReady}/${coverage.total || 0} · agreements ${coverage.agreementReady}/${coverage.total || 0}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td>${statusPill(risk.level)}</td></tr>`;
       }
@@ -2115,7 +2160,7 @@ Thank you.`;
         .filter(e => modality === 'all' || e.modality === modality)
         .filter(e => riskFilter === 'all' || deriveRisk(e).level === riskFilter)
         .filter(e => !query || [e.name,e.city,e.country,e.owner,e.medicalOwner,...(e.speakers||[])].join(' ').toLowerCase().includes(query))
-        .sort((a,b) => String(a.date).localeCompare(String(b.date)))
+        .sort((a,b) => eventStartDate(a).localeCompare(eventStartDate(b)))
         .slice(0,8);
       document.getElementById('upcomingTable').innerHTML = list.length ? list.map(e => eventRow(e,false)).join('') : '<tr><td colspan="7"><div class="empty-state"><strong>No matching events</strong>Adjust the filters or search phrase.</div></td></tr>';
       bindDynamicEventOpeners();
@@ -2132,7 +2177,7 @@ Thank you.`;
         .filter(e => border === 'all' || (border === 'yes' ? e.crossBorder : !e.crossBorder))
         .filter(e => !query || JSON.stringify(e).toLowerCase().includes(query))
         .filter(e => !global || JSON.stringify(e).toLowerCase().includes(global))
-        .sort((a,b) => String(a.date).localeCompare(String(b.date)));
+        .sort((a,b) => eventStartDate(a).localeCompare(eventStartDate(b)));
       document.getElementById('allEventsTable').innerHTML = list.length ? list.map(e => eventRow(e,true)).join('') : '<tr><td colspan="10"><div class="empty-state"><strong>No matching events</strong>Adjust your filters.</div></td></tr>';
       bindDynamicEventOpeners();
     }
@@ -2142,7 +2187,7 @@ Thank you.`;
       const list = state.events.filter(e => e.medical?.needed).filter(e => filter === 'all' || e.medical.status === filter).sort((a,b) => String(a.medical.due).localeCompare(String(b.medical.due)));
       document.getElementById('medicalReviewGrid').innerHTML = list.length ? list.map(e => {
         const risk = deriveRisk(e);
-        return `<article class="review-card" data-event-id="${e.id}"><div class="review-card-top"><div><h3>${escapeHtml(e.name)}</h3><div class="meta">${escapeHtml(e.modality)} · ${formatDate(e.date)} · ${escapeHtml(eventLocation(e))} · slides ${escapeHtml(presentationState(e).label.toLowerCase())}</div></div>${statusPill(e.medical.status)}</div><div class="review-reason">${escapeHtml(e.medical.reason)}</div><ul class="topic-list">${(e.medical.topics||[]).slice(0,4).map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul><div class="review-footer"><small>Review due ${formatDate(e.medical.due)}</small><button class="ghost-button" data-event-id="${e.id}">Open review</button></div></article>`;
+        return `<article class="review-card" data-event-id="${e.id}"><div class="review-card-top"><div><h3>${escapeHtml(e.name)}</h3><div class="meta">${escapeHtml(e.modality)} · ${formatEventDateRange(e)} · ${escapeHtml(eventLocation(e))} · slides ${escapeHtml(presentationState(e).label.toLowerCase())}</div></div>${statusPill(e.medical.status)}</div><div class="review-reason">${escapeHtml(e.medical.reason)}</div><ul class="topic-list">${(e.medical.topics||[]).slice(0,4).map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul><div class="review-footer"><small>Review due ${formatDate(e.medical.due)}</small><button class="ghost-button" data-event-id="${e.id}">Open review</button></div></article>`;
       }).join('') : '<div class="panel"><div class="empty-state"><strong>No events in this review state</strong>Change the filter to see other events.</div></div>';
       bindDynamicEventOpeners();
     }
@@ -2390,7 +2435,7 @@ Thank you.`;
       const presentationCard = renderEventPresentationCard(event);
       document.getElementById('drawerContent').innerHTML = `
         <div class="drawer-summary">
-          <div class="summary-tile"><label>Date</label><strong>${formatDate(event.date)}</strong></div>
+          <div class="summary-tile"><label>Dates</label><strong>${formatEventDateRange(event)}</strong></div>
           <div class="summary-tile"><label>${escapeHtml(eventFormatLabel(event))}</label><strong>${escapeHtml(eventLocation(event))}</strong></div>
           <div class="summary-tile"><label>Readiness</label><strong>${progress}% complete</strong></div>
           <div class="summary-tile"><label>Risk</label><strong>${risk.level}</strong></div>
@@ -2410,11 +2455,13 @@ Thank you.`;
           <div class="detail-item"><label>Planned / committed / actual</label><div>${formatMoney(event.budget?.planned||0,state.settings.currency)} / ${formatMoney(event.budget?.committed||0,state.settings.currency)} / ${formatMoney(event.budget?.actual||0,state.settings.currency)}</div></div>
           <div class="detail-item"><label>Sponsor support</label><div>${event.sponsors?.length ? event.sponsors.map(s=>`${escapeHtml(s.name)} (${formatMoney(s.amount,state.settings.currency)}, ${escapeHtml(s.status)})`).join('<br>') : 'None recorded'}</div></div>
         </div></div></div>
-        <div class="drawer-section"><div class="drawer-section-head"><h3>Event format &amp; location</h3>${statusPill(eventFormatLabel(event))}</div><div class="drawer-section-body">
-          <div class="form-row"><div class="field"><label for="eventDateEdit">Event date</label><input class="input" type="date" id="eventDateEdit" value="${escapeHtml(event.date || '')}" /></div><div class="field"><label for="eventDeliveryModeEdit">Event format</label><select class="input" id="eventDeliveryModeEdit"><option ${eventIsVirtual(event)?'':'selected'}>In-person</option><option ${eventIsVirtual(event)?'selected':''}>Virtual</option></select></div></div>
+        <div class="drawer-section"><div class="drawer-section-head"><h3>Event details &amp; location</h3>${statusPill(eventFormatLabel(event))}</div><div class="drawer-section-body">
+          <div class="field"><label for="eventNameEdit">Event name *</label><input class="input" id="eventNameEdit" value="${escapeHtml(event.name || '')}" /></div>
+          <div class="form-row"><div class="field"><label for="eventStartDateEdit">Start date</label><input class="input" type="date" id="eventStartDateEdit" value="${escapeHtml(eventStartDate(event))}" /></div><div class="field"><label for="eventEndDateEdit">End date</label><input class="input" type="date" id="eventEndDateEdit" value="${escapeHtml(eventEndDate(event))}" /></div></div>
+          <div class="field"><label for="eventDeliveryModeEdit">Event format</label><select class="input" id="eventDeliveryModeEdit"><option ${eventIsVirtual(event)?'':'selected'}>In-person</option><option ${eventIsVirtual(event)?'selected':''}>Virtual</option></select></div>
           <div class="conditional-block" id="eventInPersonFields" ${eventIsVirtual(event)?'hidden':''}><div class="form-row"><div class="field"><label for="eventVenueEdit">Venue</label><input class="input" id="eventVenueEdit" value="${escapeHtml(event.venue || '')}" placeholder="Hospital, hotel or convention center" /></div><div class="field"><label for="eventCityEdit">City</label><input class="input" id="eventCityEdit" value="${escapeHtml(event.city || '')}" /></div></div><div class="field"><label for="eventCountryEdit">Country / market</label><input class="input" id="eventCountryEdit" value="${escapeHtml(event.country || '')}" /></div></div>
           <div class="conditional-block" id="eventVirtualFields" ${eventIsVirtual(event)?'':'hidden'}><div class="field"><label for="eventVirtualPlatformEdit">Virtual platform or meeting details</label><input class="input" id="eventVirtualPlatformEdit" value="${escapeHtml(event.virtualPlatform || '')}" placeholder="Microsoft Teams, Zoom or approved platform" /></div></div>
-          <div style="display:flex;justify-content:flex-end"><button class="compact-button primary" id="saveEventLogistics">Save format &amp; location</button></div>
+          <div style="display:flex;justify-content:flex-end"><button class="compact-button primary" id="saveEventLogistics">Save event details</button></div>
         </div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Presentation slides</h3><span class="pill ${slideReview.tone}">${escapeHtml(slideReview.label)}</span></div><div class="drawer-section-body">
           <div class="local-storage-note"><strong>Review control:</strong> upload the deck, assign a reviewer, record comments, then mark it approved. The file remains in this browser and is not committed to GitHub.</div>
@@ -2431,7 +2478,7 @@ Thank you.`;
           <div class="faculty-document-grid" style="margin:13px 0">${rateReference}</div>
           <div style="display:flex;justify-content:flex-end"><button class="compact-button primary" id="saveEventHonorarium">Save event honorarium</button></div>
         </div></div>
-        <div class="drawer-section"><div class="drawer-section-head"><h3>Physician records</h3>${coverage.total ? `<span class="pill ${coverage.complete === coverage.total ? 'green' : 'amber'}">${coverage.complete}/${coverage.total} complete</span>` : '<span class="pill gray">No faculty</span>'}</div><div class="drawer-section-body"><div class="local-storage-note"><strong>Prototype storage:</strong> CVs, honorarium files and contracts stay in this browser and are not uploaded to GitHub. Agreement status is calculated from the uploaded contract, effective date, expiry date and the event date.</div><div class="faculty-list">${facultyCards}</div><div class="faculty-add-row"><select class="mini-select" id="eventPhysicianSelect" ${available.length ? '' : 'disabled'}>${availableOptions}</select><button class="compact-button primary" id="assignPhysicianButton" ${available.length ? '' : 'disabled'}>Add selected</button><button class="compact-button" id="newPhysicianForEvent">New physician</button></div></div></div>
+        <div class="drawer-section"><div class="drawer-section-head"><h3>Physician records</h3>${coverage.total ? `<span class="pill ${coverage.complete === coverage.total ? 'green' : 'amber'}">${coverage.complete}/${coverage.total} complete</span>` : '<span class="pill gray">No faculty</span>'}</div><div class="drawer-section-body"><div class="local-storage-note"><strong>Prototype storage:</strong> CVs, honorarium files and contracts stay in this browser and are not uploaded to GitHub. Agreement status is calculated from the uploaded contract, effective date, expiry date and the full event date range.</div><div class="faculty-list">${facultyCards}</div><div class="faculty-add-row"><select class="mini-select" id="eventPhysicianSelect" ${available.length ? '' : 'disabled'}>${availableOptions}</select><button class="compact-button primary" id="assignPhysicianButton" ${available.length ? '' : 'disabled'}>Add selected</button><button class="compact-button" id="newPhysicianForEvent">New physician</button></div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Medical contribution</h3>${statusPill(event.medical?.status||'Not started')}</div><div class="drawer-section-body"><div class="detail-item"><label>Objective</label><div>${escapeHtml(event.objective||'Not defined')}</div></div><div class="recommendation-box"><strong>Suggested Medical discussion points</strong><ul>${(event.medical?.topics||defaultTopics(event.modality)).map(t=>`<li>${escapeHtml(t)}</li>`).join('')}</ul></div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Automated risk explanation</h3>${statusPill(risk.level)}</div><div class="drawer-section-body"><div class="recommendation-box" style="background:${risk.level==='High'?'var(--red-2)':risk.level==='Medium'?'var(--amber-2)':'var(--green-2)'};color:var(--ink)">${riskList}</div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Source / latest update</h3></div><div class="drawer-section-body"><div class="source-email">${escapeHtml(event.sourceEmail||'No source email stored.')}</div></div></div>`;
@@ -2450,8 +2497,26 @@ Thank you.`;
       bindEventPresentationControls(drawerRoot);
       const toggleEventLocationFields = () => { const virtual = document.getElementById('eventDeliveryModeEdit')?.value === 'Virtual'; const inPerson = document.getElementById('eventInPersonFields'); const virtualFields = document.getElementById('eventVirtualFields'); if (inPerson) inPerson.hidden = virtual; if (virtualFields) virtualFields.hidden = !virtual; };
       document.getElementById('eventDeliveryModeEdit')?.addEventListener('change', toggleEventLocationFields);
+      const syncEventDateRangeInputs = () => {
+        const startInput = document.getElementById('eventStartDateEdit');
+        const endInput = document.getElementById('eventEndDateEdit');
+        if (!startInput || !endInput) return;
+        endInput.min = startInput.value || '';
+        if (startInput.value && (!endInput.value || endInput.value < startInput.value)) endInput.value = startInput.value;
+      };
+      document.getElementById('eventStartDateEdit')?.addEventListener('change', syncEventDateRangeInputs);
+      syncEventDateRangeInputs();
       document.getElementById('saveEventLogistics')?.addEventListener('click', () => {
-        event.date = document.getElementById('eventDateEdit')?.value || '';
+        const updatedName = document.getElementById('eventNameEdit')?.value.trim() || '';
+        const startDate = document.getElementById('eventStartDateEdit')?.value || '';
+        const endDate = document.getElementById('eventEndDateEdit')?.value || startDate;
+        if (!updatedName) { showToast('Event name required','Enter an event name before saving.'); return; }
+        if (endDate && !startDate) { showToast('Start date required','Choose a start date before setting an end date.'); return; }
+        if (startDate && endDate < startDate) { showToast('Date range is invalid','The end date cannot be earlier than the start date.'); return; }
+        event.name = updatedName;
+        event.startDate = startDate;
+        event.endDate = endDate;
+        event.date = startDate;
         event.deliveryMode = document.getElementById('eventDeliveryModeEdit')?.value || 'In-person';
         event.venue = document.getElementById('eventVenueEdit')?.value.trim() || '';
         event.city = document.getElementById('eventCityEdit')?.value.trim() || '';
@@ -2459,7 +2524,7 @@ Thank you.`;
         event.virtualPlatform = document.getElementById('eventVirtualPlatformEdit')?.value.trim() || '';
         event.milestones.dateLocation = eventLogisticsReady(event) ? 'Done' : 'Not started';
         event.lastUpdate = new Date().toISOString().slice(0,10); updateStageFromMilestones(event); saveState(); renderAll(); openEvent(event.id);
-        showToast('Event format saved',`${event.name} is recorded as ${eventFormatLabel(event).toLowerCase()}${eventIsVirtual(event) ? '' : ` in ${eventLocation(event)}`}.`);
+        showToast('Event details saved',`${event.name} is scheduled for ${formatEventDateRange(event)}${eventIsVirtual(event) ? '' : ` in ${eventLocation(event)}`}.`);
       });
       document.getElementById('savePresentationReview')?.addEventListener('click', () => {
         event.presentation = { file:event.presentation?.file || null, reviewStatus:document.getElementById('presentationStatus')?.value || 'Not uploaded', version:document.getElementById('presentationVersion')?.value.trim() || '', reviewOwner:document.getElementById('presentationReviewOwner')?.value.trim() || '', reviewDueDate:document.getElementById('presentationReviewDueDate')?.value || '', reviewComments:document.getElementById('presentationReviewComments')?.value.trim() || '', approvedBy:document.getElementById('presentationApprovedBy')?.value.trim() || '', approvalDate:document.getElementById('presentationApprovalDate')?.value || '' };
@@ -2886,7 +2951,7 @@ Thank you.`;
       const id=`EVT-${String(new Date().getFullYear()).slice(-2)}${String(Math.floor(Math.random()*900)+100)}`;
       const sponsor=x.sponsor?[{name:x.sponsor.name,amount:x.sponsor.amount,type:'Educational support',status:x.sponsor.status}]:[];
       const event={
-        id,name:x.eventName||`${x.modality} Medical Event`,modality:x.modality,stage:'Intake',date:x.date||'',deliveryMode:x.deliveryMode||'In-person',venue:'',virtualPlatform:x.virtualPlatform||'',city:x.city||'',country:x.country||'',owner:x.commercialOwner||'Unassigned',medicalOwner:'Unassigned',attendees:x.attendees||0,audience:x.audience||'Not defined',speakers:x.speakers,physicianIds:[],
+        id,name:x.eventName||`${x.modality} Medical Event`,modality:x.modality,stage:'Intake',date:x.date||'',startDate:x.date||'',endDate:x.date||'',deliveryMode:x.deliveryMode||'In-person',venue:'',virtualPlatform:x.virtualPlatform||'',city:x.city||'',country:x.country||'',owner:x.commercialOwner||'Unassigned',medicalOwner:'Unassigned',attendees:x.attendees||0,audience:x.audience||'Not defined',speakers:x.speakers,physicianIds:[],
         honorarium:{amount:x.honorarium.amount,currency:x.honorarium.currency,status:x.honorarium.amount?'Pending approval':'Not scoped',details:x.honorarium.amount?'Extracted from commercial email; verify services, hours and physician allocation.':''},presentation:{file:null,reviewStatus:'Not uploaded',version:'',reviewOwner:'',reviewDueDate:'',reviewComments:'',approvedBy:'',approvalDate:''},budget:{planned:x.budget.amount,committed:0,actual:0},sponsors:sponsor,irf:x.irf,crossBorder:x.crossBorder,
         medical:{status:x.medicalRequest?'Needed':'In review',needed:true,due:x.medicalDue||'',reason:x.medicalRequest?'Commercial explicitly requested Medical advice on the objective, scientific agenda or faculty.':'Medical validation is recommended before the event advances.',topics:x.topics},
         objective:x.objective,sourceEmail:`From: ${x.from}\nSubject: ${x.subject}\n\n${x.sourceText}`,lastUpdate:new Date().toISOString().slice(0,10),
@@ -2916,13 +2981,16 @@ Thank you.`;
       const modality=document.getElementById('newEventModality').value;
       if(!name){showToast('Event name required','Enter a name before creating the draft.');return;}
       const deliveryMode=document.getElementById('newEventDeliveryMode').value || 'In-person';
-      const eventDate=document.getElementById('newEventDate').value;
+      const startDate=document.getElementById('newEventStartDate').value;
+      const endDate=document.getElementById('newEventEndDate').value || startDate;
+      if(endDate && !startDate){showToast('Start date required','Choose a start date before setting an end date.');return;}
+      if(startDate && endDate < startDate){showToast('Date range is invalid','The end date cannot be earlier than the start date.');return;}
       const venue=document.getElementById('newEventVenue').value.trim();
       const city=document.getElementById('newEventCity').value.trim();
       const country=document.getElementById('newEventCountry').value.trim();
       const virtualPlatform=document.getElementById('newEventVirtualPlatform').value.trim();
       if(deliveryMode==='In-person' && !(venue||city||country)){showToast('Location required','Enter the venue, city or country for an in-person event.');return;}
-      const event={id:`EVT-${String(new Date().getFullYear()).slice(-2)}${String(Math.floor(Math.random()*900)+100)}`,name,modality,stage:'Intake',date:eventDate,deliveryMode,venue,city,country,virtualPlatform,owner:document.getElementById('newEventOwner').value.trim()||'Unassigned',medicalOwner:'Unassigned',attendees:0,audience:'Not defined',speakers:[],physicianIds:[],honorarium:{amount:0,currency:state.settings.currency,status:'Not scoped',details:''},presentation:{file:null,reviewStatus:'Not uploaded',version:'',reviewOwner:'',reviewDueDate:'',reviewComments:'',approvedBy:'',approvalDate:''},budget:{planned:Number(document.getElementById('newEventBudget').value)||0,committed:0,actual:0},sponsors:[],irf:{required:true,id:'',status:'Not started'},crossBorder:document.getElementById('newEventCrossBorder').checked,medical:{status:'Needed',needed:true,due:'',reason:'New event requires Medical review of the objective, audience, topics, faculty rationale and presentation deck.',topics:defaultTopics(modality)},objective:document.getElementById('newEventObjective').value.trim()||'Objective pending Medical review.',sourceEmail:'Created manually in the event tracker.',lastUpdate:new Date().toISOString().slice(0,10),milestones:{brief:'In progress',objective:'Not started',dateLocation:eventDate && (deliveryMode==='Virtual'||venue||city||country)?'In progress':'Not started',attendees:'Not started',speakers:'Not started',physicianCv:'N/A',physicianAgreement:'N/A',honorarium:'Not started',budget:Number(document.getElementById('newEventBudget').value)?'In progress':'Not started',sponsor:'N/A',irf:'Not started',crossBorder:document.getElementById('newEventCrossBorder').checked?'Not started':'N/A',content:'Not started',presentation:'Not started',execution:'Not started',closeout:'Not started'}};
+      const event={id:`EVT-${String(new Date().getFullYear()).slice(-2)}${String(Math.floor(Math.random()*900)+100)}`,name,modality,stage:'Intake',date:startDate,startDate,endDate,deliveryMode,venue,city,country,virtualPlatform,owner:document.getElementById('newEventOwner').value.trim()||'Unassigned',medicalOwner:'Unassigned',attendees:0,audience:'Not defined',speakers:[],physicianIds:[],honorarium:{amount:0,currency:state.settings.currency,status:'Not scoped',details:''},presentation:{file:null,reviewStatus:'Not uploaded',version:'',reviewOwner:'',reviewDueDate:'',reviewComments:'',approvedBy:'',approvalDate:''},budget:{planned:Number(document.getElementById('newEventBudget').value)||0,committed:0,actual:0},sponsors:[],irf:{required:true,id:'',status:'Not started'},crossBorder:document.getElementById('newEventCrossBorder').checked,medical:{status:'Needed',needed:true,due:'',reason:'New event requires Medical review of the objective, audience, topics, faculty rationale and presentation deck.',topics:defaultTopics(modality)},objective:document.getElementById('newEventObjective').value.trim()||'Objective pending Medical review.',sourceEmail:'Created manually in the event tracker.',lastUpdate:new Date().toISOString().slice(0,10),milestones:{brief:'In progress',objective:'Not started',dateLocation:startDate && (deliveryMode==='Virtual'||venue||city||country)?'In progress':'Not started',attendees:'Not started',speakers:'Not started',physicianCv:'N/A',physicianAgreement:'N/A',honorarium:'Not started',budget:Number(document.getElementById('newEventBudget').value)?'In progress':'Not started',sponsor:'N/A',irf:'Not started',crossBorder:document.getElementById('newEventCrossBorder').checked?'Not started':'N/A',content:'Not started',presentation:'Not started',execution:'Not started',closeout:'Not started'}};
       state.events.unshift(event); saveState(); renderAll(); closeNewEventModal(); setView('events'); showToast('Draft created',`${name} is ready for intake.`); setTimeout(()=>openEvent(event.id),250);
     }
 
@@ -3485,12 +3553,12 @@ Thank you.`;
     }
 
     function exportCsv() {
-      const headers=['ID','Event','Modality','Stage','Date','Event format','Venue','Virtual platform','City','Country','Commercial owner','Medical owner','Attendees','Physicians','CVs on file','CVs missing','CV file names','Rate schedules ready','Agreements valid for event','Agreement expiry dates','Agreement issues','Contract file names','Event honorarium amount','Event honorarium currency','Event honorarium status','Event honorarium details','Presentation file','Presentation version','Presentation review status','Presentation review owner','Presentation review due','Presentation approved by','Presentation approval date','Presentation comments','IRF ID','IRF status','Cross-border','Planned budget','Committed','Actual','Medical status','Readiness','Risk'];
+      const headers=['ID','Event','Modality','Stage','Start date','End date','Date range','Event format','Venue','Virtual platform','City','Country','Commercial owner','Medical owner','Attendees','Physicians','CVs on file','CVs missing','CV file names','Rate schedules ready','Agreements valid for event','Agreement expiry dates','Agreement issues','Contract file names','Event honorarium amount','Event honorarium currency','Event honorarium status','Event honorarium details','Presentation file','Presentation version','Presentation review status','Presentation review owner','Presentation review due','Presentation approved by','Presentation approval date','Presentation comments','IRF ID','IRF status','Cross-border','Planned budget','Committed','Actual','Medical status','Readiness','Risk'];
       const rows=state.events.map(event=>{
         const physicians=getEventPhysicians(event); const coverage=physicianDocumentCoverage(event);
-        return [event.id,event.name,event.modality,event.stage,event.date,eventFormatLabel(event),event.venue||'',event.virtualPlatform||'',event.city,event.country,event.owner,event.medicalOwner,event.attendees,physicians.map(formatPhysicianLabel).join('; '),coverage.cvReady,coverage.missingCv,physicians.filter(p=>p.cv).map(p=>p.cv.name).join('; '),coverage.rateReady,coverage.agreementReady,physicians.map(p=>`${p.name}: ${p.agreement?.expiryDate||'missing'}`).join('; '),coverage.records.filter(record=>!record.agreement.complete).map(record=>`${record.physician.name}: ${record.agreement.label}`).join('; '),physicians.filter(p=>p.contractFile).map(p=>p.contractFile.name).join('; '),event.honorarium?.amount||0,event.honorarium?.currency||state.settings.currency,event.honorarium?.status||'',event.honorarium?.details||'',event.presentation?.file?.name||'',event.presentation?.version||'',event.presentation?.reviewStatus||'',event.presentation?.reviewOwner||'',event.presentation?.reviewDueDate||'',event.presentation?.approvedBy||'',event.presentation?.approvalDate||'',event.presentation?.reviewComments||'',event.irf?.id||'',event.irf?.status||'',event.crossBorder?'Yes':'No',event.budget?.planned||0,event.budget?.committed||0,event.budget?.actual||0,event.medical?.status||'',calculateProgress(event),deriveRisk(event).level];
+        return [event.id,event.name,event.modality,event.stage,eventStartDate(event),eventEndDate(event),formatEventDateRange(event),eventFormatLabel(event),event.venue||'',event.virtualPlatform||'',event.city,event.country,event.owner,event.medicalOwner,event.attendees,physicians.map(formatPhysicianLabel).join('; '),coverage.cvReady,coverage.missingCv,physicians.filter(p=>p.cv).map(p=>p.cv.name).join('; '),coverage.rateReady,coverage.agreementReady,physicians.map(p=>`${p.name}: ${p.agreement?.expiryDate||'missing'}`).join('; '),coverage.records.filter(record=>!record.agreement.complete).map(record=>`${record.physician.name}: ${record.agreement.label}`).join('; '),physicians.filter(p=>p.contractFile).map(p=>p.contractFile.name).join('; '),event.honorarium?.amount||0,event.honorarium?.currency||state.settings.currency,event.honorarium?.status||'',event.honorarium?.details||'',event.presentation?.file?.name||'',event.presentation?.version||'',event.presentation?.reviewStatus||'',event.presentation?.reviewOwner||'',event.presentation?.reviewDueDate||'',event.presentation?.approvedBy||'',event.presentation?.approvalDate||'',event.presentation?.reviewComments||'',event.irf?.id||'',event.irf?.status||'',event.crossBorder?'Yes':'No',event.budget?.planned||0,event.budget?.committed||0,event.budget?.actual||0,event.medical?.status||'',calculateProgress(event),deriveRisk(event).level];
       });
-      downloadCsvFile('ioe-medical-events.csv',headers,rows); showToast('Event CSV exported','The register includes event format, IRF, physician documents, agreement expiry and presentation review fields.');
+      downloadCsvFile('ioe-medical-events.csv',headers,rows); showToast('Event CSV exported','The register includes event date ranges, event format, IRF, physician documents, agreement expiry and presentation review fields.');
     }
 
     function exportPhysiciansCsv() {
@@ -3525,8 +3593,10 @@ Thank you.`;
       document.querySelectorAll('[data-go]').forEach(btn=>btn.addEventListener('click',()=>setView(btn.dataset.go)));
       document.getElementById('mobileMenu')?.addEventListener('click',()=>document.getElementById('sidebar')?.classList.toggle('open'));
       const toggleNewEventLocationFields = () => { const virtual = document.getElementById('newEventDeliveryMode')?.value === 'Virtual'; const inPerson = document.getElementById('newEventInPersonFields'); const virtualFields = document.getElementById('newEventVirtualFields'); if(inPerson) inPerson.hidden=virtual; if(virtualFields) virtualFields.hidden=!virtual; };
+      const syncNewEventDateRange = () => { const start=document.getElementById('newEventStartDate'); const end=document.getElementById('newEventEndDate'); if(!start||!end)return; end.min=start.value||''; if(start.value&&(!end.value||end.value<start.value))end.value=start.value; };
       document.getElementById('newEventDeliveryMode')?.addEventListener('change',toggleNewEventLocationFields);
-      document.getElementById('newEventButton')?.addEventListener('click',()=>{document.getElementById('newEventModal')?.classList.add('open');toggleNewEventLocationFields();});
+      document.getElementById('newEventStartDate')?.addEventListener('change',syncNewEventDateRange);
+      document.getElementById('newEventButton')?.addEventListener('click',()=>{document.getElementById('newEventModal')?.classList.add('open');toggleNewEventLocationFields();syncNewEventDateRange();});
       document.querySelectorAll('[data-close-modal]').forEach(btn=>btn.addEventListener('click',closeNewEventModal));
       document.getElementById('newEventModal')?.addEventListener('click',event=>{if(event.target.id==='newEventModal')closeNewEventModal();});
       document.getElementById('createManualEvent')?.addEventListener('click',createManualEvent);
