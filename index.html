@@ -380,7 +380,7 @@
     .select-control:focus, .text-control:focus { border-color: #8abeb8; box-shadow: 0 0 0 3px rgba(8,127,117,.08); }
 
     .table-wrap { overflow: auto; }
-    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    table { width: 100%; border-collapse: collapse; min-width: 1180px; }
     th {
       padding: 11px 14px;
       background: #f8fafb;
@@ -893,8 +893,8 @@
           <div class="section-heading">
             <div><h2>Upcoming events</h2><p>Next scheduled activities with readiness and risk indicators</p></div>
             <div class="filters">
-              <select class="select-control" id="portfolioModalityFilter" aria-label="Filter by event category">
-                <option value="all">All categories</option>
+              <select class="select-control" id="portfolioCategoryFilter" aria-label="Filter by event category">
+                <option value="all">All event categories</option>
               </select>
               <select class="select-control" id="portfolioRiskFilter" aria-label="Filter by risk">
                 <option value="all">All risk levels</option>
@@ -914,13 +914,14 @@
           </div>
           <div class="toolbar">
             <div class="filters">
-              <select class="select-control" id="eventsModalityFilter" aria-label="Filter by event category"><option value="all">All categories</option></select>
+              <select class="select-control" id="eventsCategoryFilter" aria-label="Filter by event category"><option value="all">All event categories</option></select>
+              <select class="select-control" id="eventsProductFilter" aria-label="Filter by product"><option value="all">All products</option></select>
               <select class="select-control" id="eventsStageFilter"><option value="all">All stages</option><option>Intake</option><option>Medical review</option><option>Compliance</option><option>Approved</option><option>Execution</option><option>Follow-up</option></select>
               <select class="select-control" id="eventsBorderFilter"><option value="all">All geographies</option><option value="yes">Cross-border</option><option value="no">Domestic</option></select>
             </div>
             <input class="text-control" id="eventTableSearch" placeholder="Filter this list…" />
           </div>
-          <div class="panel"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Dates &amp; location</th><th>Stage</th><th>Medical</th><th>IRF</th><th>Cross-border</th><th>Speakers / attendees</th><th>Budget</th><th>Readiness</th><th>Risk</th></tr></thead><tbody id="allEventsTable"></tbody></table></div></div>
+          <div class="panel"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Event category</th><th>Product</th><th>Dates &amp; location</th><th>Stage</th><th>Medical</th><th>IRF</th><th>Cross-border</th><th>Speakers / attendees</th><th>Budget</th><th>Readiness</th><th>Risk</th></tr></thead><tbody id="allEventsTable"></tbody></table></div></div>
         </section>
 
         <section class="view" id="view-physicians">
@@ -973,7 +974,7 @@
             </div>
             <div class="panel" id="extractionPanel">
               <div class="extraction-placeholder" id="extractionPlaceholder">
-                <div><div class="placeholder-art"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="m5 8 7 5 7-5"/><path d="M17 3v4M15 5h4"/></svg></div><h3>Structured intake appears here</h3><p>The assistant will detect the event, modality, date, location, attendees, speakers, honorarium, budget, sponsor, IRF reference, cross-border status and missing fields.</p></div>
+                <div><div class="placeholder-art"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="m5 8 7 5 7-5"/><path d="M17 3v4M15 5h4"/></svg></div><h3>Structured intake appears here</h3><p>The assistant will detect the event category, product, date, location, attendees, speakers, honorarium, budget, sponsor, IRF reference, cross-border status and missing fields.</p></div>
               </div>
               <div class="extraction-results" id="extractionResults" hidden></div>
             </div>
@@ -1064,8 +1065,9 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newEventModalTitle">
       <div class="modal-header"><h2 id="newEventModalTitle">Create a new event</h2><button class="icon-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
       <div class="modal-body">
-        <div class="form-row"><div class="field"><label for="newEventName">Event name *</label><input class="input" id="newEventName" placeholder="e.g., Y-90 regional masterclass" /></div><div class="field"><label for="newEventModality">Event category *</label><select class="input" id="newEventModality"><option value="Y-90" selected>Y-90</option><option value="DC Bead">DC Bead</option><option value="Cryoablation">Cryoablation</option><option value="Workshop">Workshop</option><option value="Training">Training</option><option value="Congress">Congress</option><option value="Webinar">Webinar</option><option value="Other">Other</option></select></div></div>
-        <div class="category-style-grid"><div class="field"><label for="newEventCategoryBadge">Badge text</label><input class="input" id="newEventCategoryBadge" maxlength="12" value="Y-90" placeholder="Up to 12 characters" /></div><div class="field"><label for="newEventCategoryColor">Badge color</label><select class="input" id="newEventCategoryColor"></select></div></div>
+        <div class="form-row"><div class="field"><label for="newEventName">Event name *</label><input class="input" id="newEventName" placeholder="e.g., Y-90 regional masterclass" /></div><div class="field"><label for="newEventCategory">Event category *</label><select class="input" id="newEventCategory"><option>Training</option><option>Webinar</option><option>Workshop</option><option>User Summit</option><option>CoE</option><option>Roadshow</option><option>Clinical Advisory Board</option><option selected>Masterclass</option><option>Roundtable</option><option>Clinical Exchange</option><option>Faculty Forum</option><option>Congress / Conference</option><option>Other</option></select></div></div>
+        <div class="form-row"><div class="field"><label for="newEventModality">Product *</label><select class="input" id="newEventModality"><option value="Y-90" selected>Y-90</option><option value="DC Bead">DC Bead</option><option value="Cryoablation">Cryoablation</option><option value="Multiple products">Multiple products</option><option value="Not product-specific">Not product-specific</option><option value="Other">Other</option></select></div><div class="field"><label for="newEventCategoryBadge">Product badge text</label><input class="input" id="newEventCategoryBadge" maxlength="12" value="Y-90" placeholder="Up to 12 characters" /></div></div>
+        <div class="field"><label for="newEventCategoryColor">Product badge color</label><select class="input" id="newEventCategoryColor"></select></div>
         <div class="category-preview-row" id="newEventCategoryPreview" aria-live="polite"></div>
         <div class="form-row" style="margin-top:13px"><div class="field"><label for="newEventStartDate">Start date</label><input class="input" type="date" id="newEventStartDate" /></div><div class="field"><label for="newEventEndDate">End date</label><input class="input" type="date" id="newEventEndDate" /></div></div>
         <div class="field"><label for="newEventDeliveryMode">Event format *</label><select class="input" id="newEventDeliveryMode"><option>In-person</option><option>Virtual</option></select></div>
@@ -1248,6 +1250,8 @@
       red:{ label:'Red', background:'var(--red-2)', foreground:'var(--red)' },
       gray:{ label:'Gray', background:'var(--surface-3)', foreground:'var(--muted)' }
     };
+    const EVENT_CATEGORY_DEFAULTS = ['Training','Webinar','Workshop','User Summit','CoE','Roadshow','Clinical Advisory Board','Masterclass','Roundtable','Clinical Exchange','Faculty Forum','Congress / Conference','Other'];
+    const PRODUCT_DEFAULTS = ['Y-90','DC Bead','Cryoablation','Multiple products','Not product-specific','Other'];
 
     const milestoneTemplate = [
       { key: 'brief', name: 'Commercial brief received', owner: 'Commercial' },
@@ -1281,6 +1285,8 @@
         id: 'EVT-26091',
         name: 'Y-90 Masterclass Taiwan',
         modality: 'Y-90',
+        product: 'Y-90',
+        eventCategory: 'Masterclass',
         stage: 'Medical review',
         date: '2026-09-18',
         city: 'Taipei',
@@ -1305,6 +1311,8 @@
         id: 'EVT-26084',
         name: 'DC Bead ASEAN Case Workshop',
         modality: 'DC Bead',
+        product: 'DC Bead',
+        eventCategory: 'Workshop',
         stage: 'Compliance',
         date: '2026-08-28',
         city: 'Bangkok',
@@ -1329,6 +1337,8 @@
         id: 'EVT-26076',
         name: 'Cryoablation Tumor Board Exchange',
         modality: 'Cryoablation',
+        product: 'Cryoablation',
+        eventCategory: 'Clinical Exchange',
         stage: 'Approved',
         date: '2026-10-09',
         city: 'Singapore',
@@ -1353,6 +1363,8 @@
         id: 'EVT-26099',
         name: 'Y-90 Referral Pathway Roundtable',
         modality: 'Y-90',
+        product: 'Y-90',
+        eventCategory: 'Roundtable',
         stage: 'Intake',
         date: '2026-11-06',
         city: 'Seoul',
@@ -1377,6 +1389,8 @@
         id: 'EVT-26068',
         name: 'DC Bead Clinical Exchange Japan',
         modality: 'DC Bead',
+        product: 'DC Bead',
+        eventCategory: 'Clinical Exchange',
         stage: 'Execution',
         date: '2026-08-07',
         city: 'Osaka',
@@ -1401,6 +1415,8 @@
         id: 'EVT-26055',
         name: 'Cryoablation APAC Faculty Forum',
         modality: 'Cryoablation',
+        product: 'Cryoablation',
+        eventCategory: 'Faculty Forum',
         stage: 'Follow-up',
         date: '2026-07-17',
         city: 'Kuala Lumpur',
@@ -2042,8 +2058,8 @@ Thank you.`;
       } catch { return `${currency} ${amount.toFixed(2)}`; }
     }
 
-    function categoryBadgeFromName(category) {
-      const value = String(category || 'Other').trim();
+    function categoryBadgeFromName(product) {
+      const value = String(product || 'Other').trim();
       if (/cryoablation/i.test(value)) return 'CRYO';
       if (value.length <= 12) return value.toUpperCase();
       const words = value.split(/\s+/).filter(Boolean);
@@ -2051,22 +2067,40 @@ Thank you.`;
       return value.slice(0, 12).toUpperCase();
     }
 
-    function defaultCategoryAppearance(category) {
-      const value = String(category || 'Other').trim();
+    function defaultCategoryAppearance(product) {
+      const value = String(product || 'Other').trim();
       if (/^y-?90$/i.test(value)) return { badge:'Y-90', color:'purple' };
       if (/dc\s*bead/i.test(value)) return { badge:'DC BEAD', color:'blue' };
       if (/cryo/i.test(value)) return { badge:'CRYO', color:'teal' };
-      if (/virtual|webinar|online/i.test(value)) return { badge:categoryBadgeFromName(value), color:'blue' };
-      if (/training|masterclass|workshop/i.test(value)) return { badge:categoryBadgeFromName(value), color:'green' };
-      if (/conference|congress|forum|roundtable/i.test(value)) return { badge:categoryBadgeFromName(value), color:'amber' };
+      if (/multiple/i.test(value)) return { badge:'MULTI', color:'green' };
+      if (/not product/i.test(value)) return { badge:'N/A', color:'gray' };
       return { badge:categoryBadgeFromName(value), color:'gray' };
     }
 
+    function inferEventCategory(value) {
+      const textValue = String(value || '').toLowerCase();
+      if (/clinical advisory board|advisory board/.test(textValue)) return 'Clinical Advisory Board';
+      if (/user summit|summit/.test(textValue)) return 'User Summit';
+      if (/centre of excellence|center of excellence|\bcoe\b/.test(textValue)) return 'CoE';
+      if (/roadshow/.test(textValue)) return 'Roadshow';
+      if (/webinar|online seminar/.test(textValue)) return 'Webinar';
+      if (/workshop/.test(textValue)) return 'Workshop';
+      if (/training/.test(textValue)) return 'Training';
+      if (/masterclass/.test(textValue)) return 'Masterclass';
+      if (/roundtable/.test(textValue)) return 'Roundtable';
+      if (/clinical exchange|tumor board exchange|case exchange|exchange/.test(textValue)) return 'Clinical Exchange';
+      if (/faculty forum|forum/.test(textValue)) return 'Faculty Forum';
+      if (/congress|conference|symposium/.test(textValue)) return 'Congress / Conference';
+      return 'Other';
+    }
+
     function normalizeEventCategory(event) {
-      event.modality = String(event.modality || 'Other').trim() || 'Other';
-      const defaults = defaultCategoryAppearance(event.modality);
+      event.product = String(event.product || event.modality || 'Other').trim() || 'Other';
+      event.modality = event.product;
+      event.eventCategory = String(event.eventCategory || inferEventCategory(event.name) || 'Other').trim() || 'Other';
+      const defaults = defaultCategoryAppearance(event.product);
       let badge = String(event.categoryBadge || defaults.badge).trim();
-      if (/dc\s*bead/i.test(event.modality) && /^dc$/i.test(badge)) badge = 'DC BEAD';
+      if (/dc\s*bead/i.test(event.product) && /^dc$/i.test(badge)) badge = 'DC BEAD';
       delete event.categoryIcon;
       event.categoryBadge = badge.slice(0, 12) || defaults.badge;
       event.categoryColor = CATEGORY_COLORS[event.categoryColor] ? event.categoryColor : defaults.color;
@@ -2078,12 +2112,12 @@ Thank you.`;
     }
 
     function categoryBadgeLines(value) {
-      const text = String(value || '').trim().toUpperCase().slice(0, 12);
-      if (!text) return ['OTHER'];
-      if (/^DC\s*BEAD$/i.test(text)) return ['DC', 'BEAD'];
-      const words = text.split(/\s+/).filter(Boolean);
-      if (words.length === 2 && text.length > 6) return words;
-      return [text];
+      const textValue = String(value || '').trim().toUpperCase().slice(0, 12);
+      if (!textValue) return ['OTHER'];
+      if (/^DC\s*BEAD$/i.test(textValue)) return ['DC', 'BEAD'];
+      const words = textValue.split(/\s+/).filter(Boolean);
+      if (words.length === 2 && textValue.length > 6) return words;
+      return [textValue];
     }
 
     function categoryBadgeMarkup(eventLike) {
@@ -2092,38 +2126,59 @@ Thank you.`;
       const lines = categoryBadgeLines(event.categoryBadge);
       const compact = lines.some(line => line.length > 7) ? ' compact-text' : '';
       const lineMarkup = lines.map(line => `<span class="badge-line">${escapeHtml(line)}</span>`).join('');
-      return `<div class="modality-mark${compact}" style="background:${palette.background};color:${palette.foreground}" title="${escapeHtml(event.modality)}" aria-label="Event category ${escapeHtml(event.modality)}">${lineMarkup}</div>`;
+      return `<div class="modality-mark${compact}" style="background:${palette.background};color:${palette.foreground}" title="${escapeHtml(event.product)}" aria-label="Product ${escapeHtml(event.product)}">${lineMarkup}</div>`;
+    }
+
+    function mergePresetValues(presets, storedValues) {
+      const extras = [...new Set(storedValues.map(value => String(value || '').trim()).filter(Boolean).filter(value => !presets.includes(value)))].sort((a,b) => a.localeCompare(b));
+      return [...presets, ...extras];
     }
 
     function eventCategoryValues() {
-      const standard = ['Y-90','DC Bead','Cryoablation','Workshop','Training','Congress','Webinar','Other'];
-      return [...new Set([...standard, ...state.events.map(event => String(event.modality || '').trim()).filter(Boolean)])].sort((a,b) => a.localeCompare(b));
+      return mergePresetValues(EVENT_CATEGORY_DEFAULTS, state.events.map(event => event.eventCategory || inferEventCategory(event.name)));
+    }
+
+    function productValues() {
+      return mergePresetValues(PRODUCT_DEFAULTS, state.events.map(event => event.product || event.modality));
     }
 
     function eventCategoryOptions(selected = '') {
       return eventCategoryValues().map(value => `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('');
     }
 
-    function refreshCategoryControls() {
-      const values = eventCategoryValues();
-      const options = values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
-      const newEventCategory = document.getElementById('newEventModality');
-      if (newEventCategory) {
-        const current = newEventCategory.value || 'Y-90';
-        newEventCategory.innerHTML = eventCategoryOptions(values.includes(current) ? current : 'Y-90');
-      }
-      ['portfolioModalityFilter','eventsModalityFilter'].forEach(id => {
-        const select = document.getElementById(id);
-        if (!select) return;
-        const current = select.value || 'all';
-        select.innerHTML = `<option value="all">All categories</option>${options}`;
-        select.value = values.includes(current) ? current : 'all';
-      });
+    function productOptions(selected = '') {
+      return productValues().map(value => `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('');
     }
 
-    function categoryPreviewMarkup(category, badge, color) {
-      const preview = normalizeEventCategory({ modality:category, categoryBadge:badge, categoryColor:color });
-      return `${categoryBadgeMarkup(preview)}<div><strong>${escapeHtml(preview.modality)}</strong><small>${escapeHtml(preview.categoryBadge)} · ${escapeHtml(CATEGORY_COLORS[preview.categoryColor]?.label || 'Gray')} badge</small></div>`;
+    function fillFilterOptions(id, values, allLabel) {
+      const select = document.getElementById(id);
+      if (!select) return;
+      const current = select.value || 'all';
+      select.innerHTML = `<option value="all">${escapeHtml(allLabel)}</option>${values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('')}`;
+      select.value = values.includes(current) ? current : 'all';
+    }
+
+    function refreshCategoryControls() {
+      const categories = eventCategoryValues();
+      const products = productValues();
+      const newEventCategory = document.getElementById('newEventCategory');
+      if (newEventCategory) {
+        const current = newEventCategory.value || 'Masterclass';
+        newEventCategory.innerHTML = eventCategoryOptions(categories.includes(current) ? current : 'Masterclass');
+      }
+      const newEventProduct = document.getElementById('newEventModality');
+      if (newEventProduct) {
+        const current = newEventProduct.value || 'Y-90';
+        newEventProduct.innerHTML = productOptions(products.includes(current) ? current : 'Y-90');
+      }
+      fillFilterOptions('portfolioCategoryFilter', categories, 'All event categories');
+      fillFilterOptions('eventsCategoryFilter', categories, 'All event categories');
+      fillFilterOptions('eventsProductFilter', products, 'All products');
+    }
+
+    function categoryPreviewMarkup(product, badge, color) {
+      const preview = normalizeEventCategory({ product, modality:product, categoryBadge:badge, categoryColor:color, eventCategory:'Other' });
+      return `${categoryBadgeMarkup(preview)}<div><strong>${escapeHtml(preview.product)}</strong><small>Product badge · ${escapeHtml(preview.categoryBadge)} · ${escapeHtml(CATEGORY_COLORS[preview.categoryColor]?.label || 'Gray')}</small></div>`;
     }
 
     function modalityClass(modality) {
@@ -2255,26 +2310,30 @@ Thank you.`;
     }
 
     function eventRow(event, detailed = false) {
+      normalizeEventCategory(event);
       const progress = calculateProgress(event);
       const risk = deriveRisk(event);
       const coverage = physicianDocumentCoverage(event);
       const location = eventLocation(event);
-      const common = `<td><div class="event-cell">${categoryBadgeMarkup(event)}<div><div class="event-name">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.id)} · ${escapeHtml(event.modality)}</div></div></div></td><td><div class="event-name">${formatEventDateRange(event)}</div><div class="event-sub">${escapeHtml(location)}</div><div class="delivery-badge">${escapeHtml(eventFormatLabel(event))}</div></td><td>${statusPill(event.stage)}</td>`;
+      const eventCell = `<td><div class="event-name">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.id)}</div></td>`;
+      const productCell = `<td><div class="event-cell">${categoryBadgeMarkup(event)}<div><div class="event-name">${escapeHtml(event.product)}</div><div class="event-sub">Product</div></div></div></td>`;
+      const dateCell = `<td><div class="event-name">${formatEventDateRange(event)}</div><div class="event-sub">${escapeHtml(location)}</div><div class="delivery-badge">${escapeHtml(eventFormatLabel(event))}</div></td>`;
       if (detailed) {
-        return `<tr data-event-id="${event.id}">${common}<td>${statusPill(event.medical?.status || 'Not started')}</td><td>${statusPill(event.irf?.status || 'Not started')}<div class="event-sub">${escapeHtml(event.irf?.id || 'No reference')}</div></td><td>${event.crossBorder ? '<span class="pill amber">Yes</span>' : '<span class="pill gray">No</span>'}</td><td><div class="event-name">${event.speakers?.length || 0} / ${event.attendees || 'TBD'}</div><div class="event-sub">speakers / attendees · CV ${coverage.cvReady}/${coverage.total || 0} · agreements ${coverage.agreementReady}/${coverage.total || 0}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td>${statusPill(risk.level)}</td></tr>`;
+        return `<tr data-event-id="${event.id}">${eventCell}<td><div class="event-name">${escapeHtml(event.eventCategory)}</div></td>${productCell}${dateCell}<td>${statusPill(event.stage)}</td><td>${statusPill(event.medical?.status || 'Not started')}</td><td>${statusPill(event.irf?.status || 'Not started')}<div class="event-sub">${escapeHtml(event.irf?.id || 'No reference')}</div></td><td>${event.crossBorder ? '<span class="pill amber">Yes</span>' : '<span class="pill gray">No</span>'}</td><td><div class="event-name">${event.speakers?.length || 0} / ${event.attendees || 'TBD'}</div><div class="event-sub">speakers / attendees · CV ${coverage.cvReady}/${coverage.total || 0} · agreements ${coverage.agreementReady}/${coverage.total || 0}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td>${statusPill(risk.level)}</td></tr>`;
       }
-      return `<tr data-event-id="${event.id}">${common}<td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td><div class="event-name">${escapeHtml(event.owner)}</div><div class="event-sub">Medical: ${escapeHtml(event.medicalOwner)}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td>${statusPill(risk.level)}</td></tr>`;
+      const upcomingEventCell = `<td><div class="event-cell">${categoryBadgeMarkup(event)}<div><div class="event-name">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.eventCategory)} · ${escapeHtml(event.product)}</div></div></div></td>`;
+      return `<tr data-event-id="${event.id}">${upcomingEventCell}${dateCell}<td>${statusPill(event.stage)}</td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td><div class="event-name">${escapeHtml(event.owner)}</div><div class="event-sub">Medical: ${escapeHtml(event.medicalOwner)}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td>${statusPill(risk.level)}</td></tr>`;
     }
 
     function renderUpcoming() {
-      const modality = document.getElementById('portfolioModalityFilter')?.value || 'all';
+      const category = document.getElementById('portfolioCategoryFilter')?.value || 'all';
       const riskFilter = document.getElementById('portfolioRiskFilter')?.value || 'all';
       const query = document.getElementById('globalSearch')?.value.toLowerCase().trim() || '';
       const list = state.events
         .filter(e => e.stage !== 'Follow-up')
-        .filter(e => modality === 'all' || e.modality === modality)
+        .filter(e => category === 'all' || e.eventCategory === category)
         .filter(e => riskFilter === 'all' || deriveRisk(e).level === riskFilter)
-        .filter(e => !query || [e.name,e.city,e.country,e.owner,e.medicalOwner,...(e.speakers||[])].join(' ').toLowerCase().includes(query))
+        .filter(e => !query || [e.name,e.eventCategory,e.product,e.city,e.country,e.owner,e.medicalOwner,...(e.speakers||[])].join(' ').toLowerCase().includes(query))
         .sort((a,b) => eventStartDate(a).localeCompare(eventStartDate(b)))
         .slice(0,8);
       document.getElementById('upcomingTable').innerHTML = list.length ? list.map(e => eventRow(e,false)).join('') : '<tr><td colspan="7"><div class="empty-state"><strong>No matching events</strong>Adjust the filters or search phrase.</div></td></tr>';
@@ -2282,18 +2341,20 @@ Thank you.`;
     }
 
     function renderAllEvents() {
-      const modality = document.getElementById('eventsModalityFilter')?.value || 'all';
+      const category = document.getElementById('eventsCategoryFilter')?.value || 'all';
+      const product = document.getElementById('eventsProductFilter')?.value || 'all';
       const stage = document.getElementById('eventsStageFilter')?.value || 'all';
       const border = document.getElementById('eventsBorderFilter')?.value || 'all';
       const query = (document.getElementById('eventTableSearch')?.value || '').toLowerCase().trim();
       const global = (document.getElementById('globalSearch')?.value || '').toLowerCase().trim();
-      const list = state.events.filter(e => modality === 'all' || e.modality === modality)
+      const list = state.events.filter(e => category === 'all' || e.eventCategory === category)
+        .filter(e => product === 'all' || e.product === product)
         .filter(e => stage === 'all' || e.stage === stage)
         .filter(e => border === 'all' || (border === 'yes' ? e.crossBorder : !e.crossBorder))
         .filter(e => !query || JSON.stringify(e).toLowerCase().includes(query))
         .filter(e => !global || JSON.stringify(e).toLowerCase().includes(global))
         .sort((a,b) => eventStartDate(a).localeCompare(eventStartDate(b)));
-      document.getElementById('allEventsTable').innerHTML = list.length ? list.map(e => eventRow(e,true)).join('') : '<tr><td colspan="10"><div class="empty-state"><strong>No matching events</strong>Adjust your filters.</div></td></tr>';
+      document.getElementById('allEventsTable').innerHTML = list.length ? list.map(e => eventRow(e,true)).join('') : '<tr><td colspan="12"><div class="empty-state"><strong>No matching events</strong>Adjust your filters.</div></td></tr>';
       bindDynamicEventOpeners();
     }
 
@@ -2302,7 +2363,7 @@ Thank you.`;
       const list = state.events.filter(e => e.medical?.needed).filter(e => filter === 'all' || e.medical.status === filter).sort((a,b) => String(a.medical.due).localeCompare(String(b.medical.due)));
       document.getElementById('medicalReviewGrid').innerHTML = list.length ? list.map(e => {
         const risk = deriveRisk(e);
-        return `<article class="review-card" data-event-id="${e.id}"><div class="review-card-top"><div><h3>${escapeHtml(e.name)}</h3><div class="meta">${escapeHtml(e.modality)} · ${formatEventDateRange(e)} · ${escapeHtml(eventLocation(e))} · slides ${escapeHtml(presentationState(e).label.toLowerCase())}</div></div>${statusPill(e.medical.status)}</div><div class="review-reason">${escapeHtml(e.medical.reason)}</div><ul class="topic-list">${(e.medical.topics||[]).slice(0,4).map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul><div class="review-footer"><small>Review due ${formatDate(e.medical.due)}</small><button class="ghost-button" data-event-id="${e.id}">Open review</button></div></article>`;
+        return `<article class="review-card" data-event-id="${e.id}"><div class="review-card-top"><div><h3>${escapeHtml(e.name)}</h3><div class="meta">${escapeHtml(e.eventCategory)} · ${escapeHtml(e.product)} · ${formatEventDateRange(e)} · ${escapeHtml(eventLocation(e))} · slides ${escapeHtml(presentationState(e).label.toLowerCase())}</div></div>${statusPill(e.medical.status)}</div><div class="review-reason">${escapeHtml(e.medical.reason)}</div><ul class="topic-list">${(e.medical.topics||[]).slice(0,4).map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul><div class="review-footer"><small>Review due ${formatDate(e.medical.due)}</small><button class="ghost-button" data-event-id="${e.id}">Open review</button></div></article>`;
       }).join('') : '<div class="panel"><div class="empty-state"><strong>No events in this review state</strong>Change the filter to see other events.</div></div>';
       bindDynamicEventOpeners();
     }
@@ -2527,7 +2588,7 @@ Thank you.`;
       const physicians = getEventPhysicians(event);
       const coverage = physicianDocumentCoverage(event);
       document.getElementById('drawerTitle').textContent = event.name;
-      document.getElementById('drawerSubtitle').textContent = `${event.id} · ${event.modality} · last updated ${formatDate(event.lastUpdate)}`;
+      document.getElementById('drawerSubtitle').textContent = `${event.id} · ${event.eventCategory} · ${event.product} · last updated ${formatDate(event.lastUpdate)}`;
       const milestones = milestoneTemplate.map(m => {
         const value = event.milestones?.[m.key] || 'Not started';
         const automatic = ['physicianCv','physicianAgreement','presentation'].includes(m.key);
@@ -2559,6 +2620,8 @@ Thank you.`;
         </div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Progress checklist</h3><span class="pill blue">${progress}%</span></div><div class="drawer-section-body"><div class="milestone-list">${milestones}</div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Core details</h3>${statusPill(event.stage)}</div><div class="drawer-section-body"><div class="detail-grid">
+          <div class="detail-item"><label>Event category</label><div>${escapeHtml(event.eventCategory)}</div></div>
+          <div class="detail-item"><label>Product</label><div>${escapeHtml(event.product)}</div></div>
           <div class="detail-item"><label>Commercial owner</label><div>${escapeHtml(event.owner)}</div></div>
           <div class="detail-item"><label>Medical owner</label><div>${escapeHtml(event.medicalOwner)}</div></div>
           <div class="detail-item"><label>Audience</label><div>${escapeHtml(event.audience || 'Not defined')}</div></div>
@@ -2573,9 +2636,10 @@ Thank you.`;
           <div class="detail-item"><label>Sponsor support</label><div>${event.sponsors?.length ? event.sponsors.map(s=>`${escapeHtml(s.name)} (${formatMoney(s.amount,state.settings.currency)}, ${escapeHtml(s.status)})`).join('<br>') : 'None recorded'}</div></div>
         </div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Event details &amp; location</h3>${statusPill(eventFormatLabel(event))}</div><div class="drawer-section-body">
-          <div class="form-row"><div class="field"><label for="eventNameEdit">Event name *</label><input class="input" id="eventNameEdit" value="${escapeHtml(event.name || '')}" /></div><div class="field"><label for="eventModalityEdit">Event category *</label><select class="input" id="eventModalityEdit">${eventCategoryOptions(event.modality || 'Other')}</select></div></div>
-          <div class="category-style-grid"><div class="field"><label for="eventCategoryBadgeEdit">Badge text</label><input class="input" id="eventCategoryBadgeEdit" maxlength="12" value="${escapeHtml(event.categoryBadge || '')}" placeholder="Up to 12 characters" /></div><div class="field"><label for="eventCategoryColorEdit">Badge color</label><select class="input" id="eventCategoryColorEdit">${categoryColorOptions(event.categoryColor)}</select></div></div>
-          <div class="category-preview-row" id="eventCategoryPreview">${categoryPreviewMarkup(event.modality,event.categoryBadge,event.categoryColor)}</div>
+          <div class="form-row"><div class="field"><label for="eventNameEdit">Event name *</label><input class="input" id="eventNameEdit" value="${escapeHtml(event.name || '')}" /></div><div class="field"><label for="eventCategoryEdit">Event category *</label><select class="input" id="eventCategoryEdit">${eventCategoryOptions(event.eventCategory || 'Other')}</select></div></div>
+          <div class="form-row"><div class="field"><label for="eventModalityEdit">Product *</label><select class="input" id="eventModalityEdit">${productOptions(event.product || event.modality || 'Other')}</select></div><div class="field"><label for="eventCategoryBadgeEdit">Product badge text</label><input class="input" id="eventCategoryBadgeEdit" maxlength="12" value="${escapeHtml(event.categoryBadge || '')}" placeholder="Up to 12 characters" /></div></div>
+          <div class="field"><label for="eventCategoryColorEdit">Product badge color</label><select class="input" id="eventCategoryColorEdit">${categoryColorOptions(event.categoryColor)}</select></div>
+          <div class="category-preview-row" id="eventCategoryPreview">${categoryPreviewMarkup(event.product,event.categoryBadge,event.categoryColor)}</div>
           <div class="form-row" style="margin-top:13px"><div class="field"><label for="eventStartDateEdit">Start date</label><input class="input" type="date" id="eventStartDateEdit" value="${escapeHtml(eventStartDate(event))}" /></div><div class="field"><label for="eventEndDateEdit">End date</label><input class="input" type="date" id="eventEndDateEdit" value="${escapeHtml(eventEndDate(event))}" /></div></div>
           <div class="field"><label for="eventDeliveryModeEdit">Event format</label><select class="input" id="eventDeliveryModeEdit"><option ${eventIsVirtual(event)?'':'selected'}>In-person</option><option ${eventIsVirtual(event)?'selected':''}>Virtual</option></select></div>
           <div class="conditional-block" id="eventInPersonFields" ${eventIsVirtual(event)?'hidden':''}><div class="form-row"><div class="field"><label for="eventVenueEdit">Venue</label><input class="input" id="eventVenueEdit" value="${escapeHtml(event.venue || '')}" placeholder="Hospital, hotel or convention center" /></div><div class="field"><label for="eventCityEdit">City</label><input class="input" id="eventCityEdit" value="${escapeHtml(event.city || '')}" /></div></div><div class="field"><label for="eventCountryEdit">Country / market</label><input class="input" id="eventCountryEdit" value="${escapeHtml(event.country || '')}" /></div></div>
@@ -2598,7 +2662,7 @@ Thank you.`;
           <div style="display:flex;justify-content:flex-end"><button class="compact-button primary" id="saveEventHonorarium">Save event honorarium</button></div>
         </div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Physician records</h3>${coverage.total ? `<span class="pill ${coverage.complete === coverage.total ? 'green' : 'amber'}">${coverage.complete}/${coverage.total} complete</span>` : '<span class="pill gray">No faculty</span>'}</div><div class="drawer-section-body"><div class="local-storage-note"><strong>Prototype storage:</strong> CVs, honorarium files and contracts stay in this browser and are not uploaded to GitHub. Agreement status is calculated from the uploaded contract, effective date, expiry date and the full event date range.</div><div class="faculty-list">${facultyCards}</div><div class="faculty-add-row"><select class="mini-select" id="eventPhysicianSelect" ${available.length ? '' : 'disabled'}>${availableOptions}</select><button class="compact-button primary" id="assignPhysicianButton" ${available.length ? '' : 'disabled'}>Add selected</button><button class="compact-button" id="newPhysicianForEvent">New physician</button></div></div></div>
-        <div class="drawer-section"><div class="drawer-section-head"><h3>Medical contribution</h3>${statusPill(event.medical?.status||'Not started')}</div><div class="drawer-section-body"><div class="detail-item"><label>Objective</label><div>${escapeHtml(event.objective||'Not defined')}</div></div><div class="recommendation-box"><strong>Suggested Medical discussion points</strong><ul>${(event.medical?.topics||defaultTopics(event.modality)).map(t=>`<li>${escapeHtml(t)}</li>`).join('')}</ul></div></div></div>
+        <div class="drawer-section"><div class="drawer-section-head"><h3>Medical contribution</h3>${statusPill(event.medical?.status||'Not started')}</div><div class="drawer-section-body"><div class="detail-item"><label>Objective</label><div>${escapeHtml(event.objective||'Not defined')}</div></div><div class="recommendation-box"><strong>Suggested Medical discussion points</strong><ul>${(event.medical?.topics||defaultTopics(event.product || event.modality)).map(t=>`<li>${escapeHtml(t)}</li>`).join('')}</ul></div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Automated risk explanation</h3>${statusPill(risk.level)}</div><div class="drawer-section-body"><div class="recommendation-box" style="background:${risk.level==='High'?'var(--red-2)':risk.level==='Medium'?'var(--amber-2)':'var(--green-2)'};color:var(--ink)">${riskList}</div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Source / latest update</h3></div><div class="drawer-section-body"><div class="source-email">${escapeHtml(event.sourceEmail||'No source email stored.')}</div></div></div>`;
       document.querySelectorAll('.milestone-select:not(:disabled)').forEach(sel => sel.addEventListener('change', e => {
@@ -2617,18 +2681,18 @@ Thank you.`;
       const toggleEventLocationFields = () => { const virtual = document.getElementById('eventDeliveryModeEdit')?.value === 'Virtual'; const inPerson = document.getElementById('eventInPersonFields'); const virtualFields = document.getElementById('eventVirtualFields'); if (inPerson) inPerson.hidden = virtual; if (virtualFields) virtualFields.hidden = !virtual; };
       document.getElementById('eventDeliveryModeEdit')?.addEventListener('change', toggleEventLocationFields);
       const syncEventCategoryPreview = (useDefaults = false) => {
-        const categoryInput = document.getElementById('eventModalityEdit');
+        const productInput = document.getElementById('eventModalityEdit');
         const badgeInput = document.getElementById('eventCategoryBadgeEdit');
         const colorInput = document.getElementById('eventCategoryColorEdit');
         const preview = document.getElementById('eventCategoryPreview');
-        if (!categoryInput || !badgeInput || !colorInput || !preview) return;
-        const category = categoryInput.value.trim() || 'Other';
+        if (!productInput || !badgeInput || !colorInput || !preview) return;
+        const product = productInput.value.trim() || 'Other';
         if (useDefaults) {
-          const defaults = defaultCategoryAppearance(category);
+          const defaults = defaultCategoryAppearance(product);
           badgeInput.value = defaults.badge;
           colorInput.value = defaults.color;
         }
-        preview.innerHTML = categoryPreviewMarkup(category, badgeInput.value, colorInput.value);
+        preview.innerHTML = categoryPreviewMarkup(product, badgeInput.value, colorInput.value);
       };
       document.getElementById('eventModalityEdit')?.addEventListener('change', () => syncEventCategoryPreview(true));
       document.getElementById('eventModalityEdit')?.addEventListener('input', () => syncEventCategoryPreview(false));
@@ -2644,17 +2708,21 @@ Thank you.`;
       syncEventDateRangeInputs();
       document.getElementById('saveEventLogistics')?.addEventListener('click', () => {
         const updatedName = document.getElementById('eventNameEdit')?.value.trim() || '';
-        const updatedCategory = document.getElementById('eventModalityEdit')?.value.trim() || '';
+        const updatedEventCategory = document.getElementById('eventCategoryEdit')?.value.trim() || '';
+        const updatedProduct = document.getElementById('eventModalityEdit')?.value.trim() || '';
         const startDate = document.getElementById('eventStartDateEdit')?.value || '';
         const endDate = document.getElementById('eventEndDateEdit')?.value || startDate;
         if (!updatedName) { showToast('Event name required','Enter an event name before saving.'); return; }
-        if (!updatedCategory) { showToast('Event category required','Enter an event category before saving.'); return; }
+        if (!updatedEventCategory) { showToast('Event category required','Select an event category before saving.'); return; }
+        if (!updatedProduct) { showToast('Product required','Select a product before saving.'); return; }
         if (endDate && !startDate) { showToast('Start date required','Choose a start date before setting an end date.'); return; }
         if (startDate && endDate < startDate) { showToast('Date range is invalid','The end date cannot be earlier than the start date.'); return; }
         event.name = updatedName;
-        event.modality = updatedCategory;
-        event.categoryBadge = (document.getElementById('eventCategoryBadgeEdit')?.value.trim() || defaultCategoryAppearance(updatedCategory).badge).slice(0, 12);
-        event.categoryColor = document.getElementById('eventCategoryColorEdit')?.value || defaultCategoryAppearance(updatedCategory).color;
+        event.eventCategory = updatedEventCategory;
+        event.product = updatedProduct;
+        event.modality = updatedProduct;
+        event.categoryBadge = (document.getElementById('eventCategoryBadgeEdit')?.value.trim() || defaultCategoryAppearance(updatedProduct).badge).slice(0, 12);
+        event.categoryColor = document.getElementById('eventCategoryColorEdit')?.value || defaultCategoryAppearance(updatedProduct).color;
         normalizeEventCategory(event);
         event.startDate = startDate;
         event.endDate = endDate;
@@ -3024,6 +3092,7 @@ Thank you.`;
       if (!body) { showToast('Email body is empty','Paste an email or load the sample first.'); return; }
 
       const modality = /\b(y-?90|sirt|radioembolization)\b/i.test(text) ? 'Y-90' : /\b(dc\s*bead|deb-?tace)\b/i.test(text) ? 'DC Bead' : /\b(cryoablation|cryo)\b/i.test(text) ? 'Cryoablation' : 'Other';
+      const eventCategory = inferEventCategory(text);
       const date = parseDateText(text);
       const attendeesRaw = firstMatch(text,[/(?:approximately|around|about|for|expected attendees\s*:?)[^\d\n]{0,18}(\d{1,4})\s+(?:attendees|participants|hcp|healthcare professionals)/i,/Expected attendees\s*:\s*(\d{1,4})/i]);
       const attendees = Number(attendeesRaw)||0;
@@ -3047,7 +3116,7 @@ Thank you.`;
       const medicalRequest = /medical[^\n.]{0,100}(?:suggest|review|advise|feedback|approve)|scientific objective|agenda topics/i.test(text);
       const dueText = firstMatch(text,[/(?:by|before|due)\s+(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+20\d{2})/i]);
       const medicalDue = dueText ? parseDateText(dueText) : '';
-      const eventName = subject.replace(/^(?:re|fw|fwd)\s*:\s*/i,'').replace(/^(?:request|proposal|event request)\s*:\s*/i,'').replace(/\s+[–-]\s+\d{1,2}\s+\w+\s+20\d{2}.*$/i,'').trim() || `${modality} Medical Event`;
+      const eventName = subject.replace(/^(?:re|fw|fwd)\s*:\s*/i,'').replace(/^(?:request|proposal|event request)\s*:\s*/i,'').replace(/\s+[–-]\s+\d{1,2}\s+\w+\s+20\d{2}.*$/i,'').trim() || `${modality} ${eventCategory}`;
       const objective = firstMatch(text,[/(?:objective|purpose)\s*:\s*([^\n]+)/i]) || (medicalRequest ? `Medical input requested to define a balanced scientific objective for the ${modality} event.` : 'Objective not stated.');
       const audience = firstMatch(text,[/(?:audience (?:will be|is)|target audience\s*:)\s*([^\.\n]+)/i]);
       const missing=[];
@@ -3065,7 +3134,7 @@ Thank you.`;
       if(!audience) missing.push('Target audience');
 
       const extracted = {
-        from, subject, sourceText:body, eventName, modality, date, city, country, location:locationRaw, deliveryMode, virtualPlatform, attendees, speakers, commercialOwner, budget, honorarium,
+        from, subject, sourceText:body, eventName, modality, product:modality, eventCategory, date, city, country, location:locationRaw, deliveryMode, virtualPlatform, attendees, speakers, commercialOwner, budget, honorarium,
         sponsor: sponsorLine ? { name:sponsorLine.trim() || 'External support', amount:sponsorAmount.amount, status:'Draft agreement' } : null,
         irf:{ required:true,id:irfId,status:irfStatus }, crossBorder, medicalRequest, medicalDue, objective, audience, missing, topics:defaultTopics(modality)
       };
@@ -3075,7 +3144,7 @@ Thank you.`;
 
     function renderExtraction(x) {
       const fields = [
-        ['Event',x.eventName,'high'], ['Modality',x.modality,x.modality==='Other'?'low':'high'], ['Date',x.date?formatDate(x.date):'Not found',x.date?'high':'low'], ['Format',x.deliveryMode || 'In-person','high'],
+        ['Event',x.eventName,'high'], ['Event category',x.eventCategory,x.eventCategory==='Other'?'medium':'high'], ['Product',x.product || x.modality,(x.product || x.modality)==='Other'?'low':'high'], ['Date',x.date?formatDate(x.date):'Not found',x.date?'high':'low'], ['Format',x.deliveryMode || 'In-person','high'],
         ['Location',x.location||'Not found',x.location?'high':'low'], ['Attendees',x.attendees||'Not found',x.attendees?'high':'low'], ['Speakers',x.speakers.length?x.speakers.join('; '):'Not found',x.speakers.length?'medium':'low'],
         ['Physician documents',x.speakers.length?'CV, honorarium schedule and active agreement required':'No physicians detected',x.speakers.length?'medium':'low'], ['Event honorarium',x.honorarium.amount?formatMoney(x.honorarium.amount,x.honorarium.currency):'Not found',x.honorarium.amount?'medium':'low'], ['Budget',x.budget.amount?formatMoney(x.budget.amount,x.budget.currency):'Not found',x.budget.amount?'high':'low'],
         ['Sponsor',x.sponsor?`${x.sponsor.name}${x.sponsor.amount?' · '+formatMoney(x.sponsor.amount,x.budget.currency):''}`:'None found',x.sponsor?'medium':'low'], ['IRF',x.irf.id?`${x.irf.id} · ${x.irf.status}`:'Not found',x.irf.id?'high':'low'],
@@ -3093,7 +3162,7 @@ Thank you.`;
       const id=`EVT-${String(new Date().getFullYear()).slice(-2)}${String(Math.floor(Math.random()*900)+100)}`;
       const sponsor=x.sponsor?[{name:x.sponsor.name,amount:x.sponsor.amount,type:'Educational support',status:x.sponsor.status}]:[];
       const event={
-        id,name:x.eventName||`${x.modality} Medical Event`,modality:x.modality,stage:'Intake',date:x.date||'',startDate:x.date||'',endDate:x.date||'',deliveryMode:x.deliveryMode||'In-person',venue:'',virtualPlatform:x.virtualPlatform||'',city:x.city||'',country:x.country||'',owner:x.commercialOwner||'Unassigned',medicalOwner:'Unassigned',attendees:x.attendees||0,audience:x.audience||'Not defined',speakers:x.speakers,physicianIds:[],
+        id,name:x.eventName||`${x.modality} Medical Event`,eventCategory:x.eventCategory||'Other',product:x.product||x.modality,modality:x.product||x.modality,stage:'Intake',date:x.date||'',startDate:x.date||'',endDate:x.date||'',deliveryMode:x.deliveryMode||'In-person',venue:'',virtualPlatform:x.virtualPlatform||'',city:x.city||'',country:x.country||'',owner:x.commercialOwner||'Unassigned',medicalOwner:'Unassigned',attendees:x.attendees||0,audience:x.audience||'Not defined',speakers:x.speakers,physicianIds:[],
         honorarium:{amount:x.honorarium.amount,currency:x.honorarium.currency,status:x.honorarium.amount?'Pending approval':'Not scoped',details:x.honorarium.amount?'Extracted from commercial email; verify services, hours and physician allocation.':''},presentation:{file:null,reviewStatus:'Not uploaded',version:'',reviewOwner:'',reviewDueDate:'',reviewComments:'',approvedBy:'',approvalDate:''},budget:{planned:x.budget.amount,committed:0,actual:0},sponsors:sponsor,irf:x.irf,crossBorder:x.crossBorder,
         medical:{status:x.medicalRequest?'Needed':'In review',needed:true,due:x.medicalDue||'',reason:x.medicalRequest?'Commercial explicitly requested Medical advice on the objective, scientific agenda or faculty.':'Medical validation is recommended before the event advances.',topics:x.topics},
         objective:x.objective,sourceEmail:`From: ${x.from}\nSubject: ${x.subject}\n\n${x.sourceText}`,lastUpdate:new Date().toISOString().slice(0,10),
@@ -3120,10 +3189,12 @@ Thank you.`;
 
     function createManualEvent() {
       const name=document.getElementById('newEventName').value.trim();
-      const modality=document.getElementById('newEventModality').value.trim();
+      const eventCategory=document.getElementById('newEventCategory').value.trim();
+      const product=document.getElementById('newEventModality').value.trim();
       if(!name){showToast('Event name required','Enter a name before creating the draft.');return;}
-      if(!modality){showToast('Event category required','Enter an event category before creating the draft.');return;}
-      const categoryDefaults=defaultCategoryAppearance(modality);
+      if(!eventCategory){showToast('Event category required','Select an event category before creating the draft.');return;}
+      if(!product){showToast('Product required','Select a product before creating the draft.');return;}
+      const categoryDefaults=defaultCategoryAppearance(product);
       const categoryBadge=(document.getElementById('newEventCategoryBadge')?.value.trim() || categoryDefaults.badge).slice(0,12);
       const categoryColor=document.getElementById('newEventCategoryColor')?.value || categoryDefaults.color;
       const deliveryMode=document.getElementById('newEventDeliveryMode').value || 'In-person';
@@ -3136,7 +3207,7 @@ Thank you.`;
       const country=document.getElementById('newEventCountry').value.trim();
       const virtualPlatform=document.getElementById('newEventVirtualPlatform').value.trim();
       if(deliveryMode==='In-person' && !(venue||city||country)){showToast('Location required','Enter the venue, city or country for an in-person event.');return;}
-      const event={id:`EVT-${String(new Date().getFullYear()).slice(-2)}${String(Math.floor(Math.random()*900)+100)}`,name,modality,categoryBadge,categoryColor,stage:'Intake',date:startDate,startDate,endDate,deliveryMode,venue,city,country,virtualPlatform,owner:document.getElementById('newEventOwner').value.trim()||'Unassigned',medicalOwner:'Unassigned',attendees:0,audience:'Not defined',speakers:[],physicianIds:[],honorarium:{amount:0,currency:state.settings.currency,status:'Not scoped',details:''},presentation:{file:null,reviewStatus:'Not uploaded',version:'',reviewOwner:'',reviewDueDate:'',reviewComments:'',approvedBy:'',approvalDate:''},budget:{planned:Number(document.getElementById('newEventBudget').value)||0,committed:0,actual:0},sponsors:[],irf:{required:true,id:'',status:'Not started'},crossBorder:document.getElementById('newEventCrossBorder').checked,medical:{status:'Needed',needed:true,due:'',reason:'New event requires Medical review of the objective, audience, topics, faculty rationale and presentation deck.',topics:defaultTopics(modality)},objective:document.getElementById('newEventObjective').value.trim()||'Objective pending Medical review.',sourceEmail:'Created manually in the event tracker.',lastUpdate:new Date().toISOString().slice(0,10),milestones:{brief:'In progress',objective:'Not started',dateLocation:startDate && (deliveryMode==='Virtual'||venue||city||country)?'In progress':'Not started',attendees:'Not started',speakers:'Not started',physicianCv:'N/A',physicianAgreement:'N/A',honorarium:'Not started',budget:Number(document.getElementById('newEventBudget').value)?'In progress':'Not started',sponsor:'N/A',irf:'Not started',crossBorder:document.getElementById('newEventCrossBorder').checked?'Not started':'N/A',content:'Not started',presentation:'Not started',execution:'Not started',closeout:'Not started'}};
+      const event={id:`EVT-${String(new Date().getFullYear()).slice(-2)}${String(Math.floor(Math.random()*900)+100)}`,name,eventCategory,product,modality:product,categoryBadge,categoryColor,stage:'Intake',date:startDate,startDate,endDate,deliveryMode,venue,city,country,virtualPlatform,owner:document.getElementById('newEventOwner').value.trim()||'Unassigned',medicalOwner:'Unassigned',attendees:0,audience:'Not defined',speakers:[],physicianIds:[],honorarium:{amount:0,currency:state.settings.currency,status:'Not scoped',details:''},presentation:{file:null,reviewStatus:'Not uploaded',version:'',reviewOwner:'',reviewDueDate:'',reviewComments:'',approvedBy:'',approvalDate:''},budget:{planned:Number(document.getElementById('newEventBudget').value)||0,committed:0,actual:0},sponsors:[],irf:{required:true,id:'',status:'Not started'},crossBorder:document.getElementById('newEventCrossBorder').checked,medical:{status:'Needed',needed:true,due:'',reason:'New event requires Medical review of the objective, audience, topics, faculty rationale and presentation deck.',topics:defaultTopics(product)},objective:document.getElementById('newEventObjective').value.trim()||'Objective pending Medical review.',sourceEmail:'Created manually in the event tracker.',lastUpdate:new Date().toISOString().slice(0,10),milestones:{brief:'In progress',objective:'Not started',dateLocation:startDate && (deliveryMode==='Virtual'||venue||city||country)?'In progress':'Not started',attendees:'Not started',speakers:'Not started',physicianCv:'N/A',physicianAgreement:'N/A',honorarium:'Not started',budget:Number(document.getElementById('newEventBudget').value)?'In progress':'Not started',sponsor:'N/A',irf:'Not started',crossBorder:document.getElementById('newEventCrossBorder').checked?'Not started':'N/A',content:'Not started',presentation:'Not started',execution:'Not started',closeout:'Not started'}};
       state.events.unshift(event); saveState(); renderAll(); closeNewEventModal(); setView('events'); showToast('Draft created',`${name} is ready for intake.`); setTimeout(()=>openEvent(event.id),250);
     }
 
@@ -3699,10 +3770,10 @@ Thank you.`;
     }
 
     function exportCsv() {
-      const headers=['ID','Event','Event category','Stage','Start date','End date','Date range','Event format','Venue','Virtual platform','City','Country','Commercial owner','Medical owner','Attendees','Physicians','CVs on file','CVs missing','CV file names','Rate schedules ready','Agreements valid for event','Agreement expiry dates','Agreement issues','Contract file names','Event honorarium amount','Event honorarium currency','Event honorarium status','Event honorarium details','Presentation file','Presentation version','Presentation review status','Presentation review owner','Presentation review due','Presentation approved by','Presentation approval date','Presentation comments','IRF ID','IRF status','Cross-border','Planned budget','Committed','Actual','Medical status','Readiness','Risk'];
+      const headers=['ID','Event','Event category','Product','Stage','Start date','End date','Date range','Event format','Venue','Virtual platform','City','Country','Commercial owner','Medical owner','Attendees','Physicians','CVs on file','CVs missing','CV file names','Rate schedules ready','Agreements valid for event','Agreement expiry dates','Agreement issues','Contract file names','Event honorarium amount','Event honorarium currency','Event honorarium status','Event honorarium details','Presentation file','Presentation version','Presentation review status','Presentation review owner','Presentation review due','Presentation approved by','Presentation approval date','Presentation comments','IRF ID','IRF status','Cross-border','Planned budget','Committed','Actual','Medical status','Readiness','Risk'];
       const rows=state.events.map(event=>{
         const physicians=getEventPhysicians(event); const coverage=physicianDocumentCoverage(event);
-        return [event.id,event.name,event.modality,event.stage,eventStartDate(event),eventEndDate(event),formatEventDateRange(event),eventFormatLabel(event),event.venue||'',event.virtualPlatform||'',event.city,event.country,event.owner,event.medicalOwner,event.attendees,physicians.map(formatPhysicianLabel).join('; '),coverage.cvReady,coverage.missingCv,physicians.filter(p=>p.cv).map(p=>p.cv.name).join('; '),coverage.rateReady,coverage.agreementReady,physicians.map(p=>`${p.name}: ${p.agreement?.expiryDate||'missing'}`).join('; '),coverage.records.filter(record=>!record.agreement.complete).map(record=>`${record.physician.name}: ${record.agreement.label}`).join('; '),physicians.filter(p=>p.contractFile).map(p=>p.contractFile.name).join('; '),event.honorarium?.amount||0,event.honorarium?.currency||state.settings.currency,event.honorarium?.status||'',event.honorarium?.details||'',event.presentation?.file?.name||'',event.presentation?.version||'',event.presentation?.reviewStatus||'',event.presentation?.reviewOwner||'',event.presentation?.reviewDueDate||'',event.presentation?.approvedBy||'',event.presentation?.approvalDate||'',event.presentation?.reviewComments||'',event.irf?.id||'',event.irf?.status||'',event.crossBorder?'Yes':'No',event.budget?.planned||0,event.budget?.committed||0,event.budget?.actual||0,event.medical?.status||'',calculateProgress(event),deriveRisk(event).level];
+        return [event.id,event.name,event.eventCategory,event.product,event.stage,eventStartDate(event),eventEndDate(event),formatEventDateRange(event),eventFormatLabel(event),event.venue||'',event.virtualPlatform||'',event.city,event.country,event.owner,event.medicalOwner,event.attendees,physicians.map(formatPhysicianLabel).join('; '),coverage.cvReady,coverage.missingCv,physicians.filter(p=>p.cv).map(p=>p.cv.name).join('; '),coverage.rateReady,coverage.agreementReady,physicians.map(p=>`${p.name}: ${p.agreement?.expiryDate||'missing'}`).join('; '),coverage.records.filter(record=>!record.agreement.complete).map(record=>`${record.physician.name}: ${record.agreement.label}`).join('; '),physicians.filter(p=>p.contractFile).map(p=>p.contractFile.name).join('; '),event.honorarium?.amount||0,event.honorarium?.currency||state.settings.currency,event.honorarium?.status||'',event.honorarium?.details||'',event.presentation?.file?.name||'',event.presentation?.version||'',event.presentation?.reviewStatus||'',event.presentation?.reviewOwner||'',event.presentation?.reviewDueDate||'',event.presentation?.approvedBy||'',event.presentation?.approvalDate||'',event.presentation?.reviewComments||'',event.irf?.id||'',event.irf?.status||'',event.crossBorder?'Yes':'No',event.budget?.planned||0,event.budget?.committed||0,event.budget?.actual||0,event.medical?.status||'',calculateProgress(event),deriveRisk(event).level];
       });
       downloadCsvFile('ioe-medical-events.csv',headers,rows); showToast('Event CSV exported','The register includes event date ranges, event format, IRF, physician documents, agreement expiry and presentation review fields.');
     }
@@ -3740,14 +3811,14 @@ Thank you.`;
       document.getElementById('mobileMenu')?.addEventListener('click',()=>document.getElementById('sidebar')?.classList.toggle('open'));
       const toggleNewEventLocationFields = () => { const virtual = document.getElementById('newEventDeliveryMode')?.value === 'Virtual'; const inPerson = document.getElementById('newEventInPersonFields'); const virtualFields = document.getElementById('newEventVirtualFields'); if(inPerson) inPerson.hidden=virtual; if(virtualFields) virtualFields.hidden=!virtual; };
       const syncNewEventCategoryPreview = (useDefaults = false) => {
-        const category=document.getElementById('newEventModality');
+        const product=document.getElementById('newEventModality');
         const badge=document.getElementById('newEventCategoryBadge');
         const color=document.getElementById('newEventCategoryColor');
         const preview=document.getElementById('newEventCategoryPreview');
-        if(!category||!badge||!color||!preview)return;
-        const categoryValue=category.value.trim()||'Other';
-        if(useDefaults){ const defaults=defaultCategoryAppearance(categoryValue); badge.value=defaults.badge; color.value=defaults.color; }
-        preview.innerHTML=categoryPreviewMarkup(categoryValue,badge.value,color.value);
+        if(!product||!badge||!color||!preview)return;
+        const productValue=product.value.trim()||'Other';
+        if(useDefaults){ const defaults=defaultCategoryAppearance(productValue); badge.value=defaults.badge; color.value=defaults.color; }
+        preview.innerHTML=categoryPreviewMarkup(productValue,badge.value,color.value);
       };
       const syncNewEventDateRange = () => { const start=document.getElementById('newEventStartDate'); const end=document.getElementById('newEventEndDate'); if(!start||!end)return; end.min=start.value||''; if(start.value&&(!end.value||end.value<start.value))end.value=start.value; };
       const newCategoryColor=document.getElementById('newEventCategoryColor');
@@ -3776,9 +3847,9 @@ Thank you.`;
       }));
       document.getElementById('closeDrawer')?.addEventListener('click',closeDrawer);
       document.getElementById('drawerBackdrop')?.addEventListener('click',closeDrawer);
-      document.getElementById('portfolioModalityFilter')?.addEventListener('change',renderUpcoming);
+      document.getElementById('portfolioCategoryFilter')?.addEventListener('change',renderUpcoming);
       document.getElementById('portfolioRiskFilter')?.addEventListener('change',renderUpcoming);
-      ['eventsModalityFilter','eventsStageFilter','eventsBorderFilter'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderAllEvents));
+      ['eventsCategoryFilter','eventsProductFilter','eventsStageFilter','eventsBorderFilter'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderAllEvents));
       document.getElementById('eventTableSearch')?.addEventListener('input',renderAllEvents);
       document.getElementById('globalSearch')?.addEventListener('input',()=>{renderUpcoming();renderAllEvents();renderPhysicians();});
       document.getElementById('physicianSearch')?.addEventListener('input',renderPhysicians);
