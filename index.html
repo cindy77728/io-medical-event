@@ -928,6 +928,15 @@
               <select class="select-control" id="eventsProductFilter" aria-label="Filter by product"><option value="all">All products</option></select>
               <select class="select-control" id="eventsStageFilter"><option value="all">All stages</option><option>Intake</option><option>Medical review</option><option>Compliance</option><option>Approved</option><option>Execution</option><option>Follow-up</option></select>
               <select class="select-control" id="eventsBorderFilter"><option value="all">All geographies</option><option value="yes">Cross-border</option><option value="no">Domestic</option></select>
+              <select class="select-control" id="eventsSortBy" aria-label="Sort events by">
+                <option value="date">Sort by date</option>
+                <option value="product">Sort by product</option>
+                <option value="location">Sort by location</option>
+              </select>
+              <select class="select-control" id="eventsSortDirection" aria-label="Choose sort direction">
+                <option value="asc">Ascending · earliest / A–Z</option>
+                <option value="desc">Descending · latest / Z–A</option>
+              </select>
             </div>
             <input class="text-control" id="eventTableSearch" placeholder="Filter this list…" />
           </div>
@@ -2325,7 +2334,7 @@ Thank you.`;
       const risk = deriveRisk(event);
       const coverage = physicianDocumentCoverage(event);
       const location = eventLocation(event);
-      const combinedEventCell = `<td><div class="event-cell event-combined">${categoryBadgeMarkup(event)}<div class="event-identity"><div class="event-name event-name-prominent">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.id)}</div><div class="event-identity-meta"><span class="event-meta-chip"><strong>Category</strong>${escapeHtml(event.eventCategory)}</span><span class="event-meta-chip"><strong>Product</strong>${escapeHtml(event.product)}</span></div></div></div></td>`;
+      const combinedEventCell = `<td><div class="event-cell event-combined">${categoryBadgeMarkup(event)}<div class="event-identity"><div class="event-name event-name-prominent">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.id)}</div><div class="event-identity-meta"><span class="event-meta-chip"><strong>Category</strong>${escapeHtml(event.eventCategory)}</span></div></div></div></td>`;
       const dateCell = `<td><div class="event-name">${formatEventDateRange(event)}</div><div class="event-sub">${escapeHtml(location)}</div><div class="delivery-badge">${escapeHtml(eventFormatLabel(event))}</div></td>`;
       if (detailed) {
         return `<tr data-event-id="${event.id}">${combinedEventCell}${dateCell}<td>${statusPill(event.stage)}</td><td>${statusPill(event.medical?.status || 'Not started')}</td><td>${statusPill(event.irf?.status || 'Not started')}<div class="event-sub">${escapeHtml(event.irf?.id || 'No reference')}</div></td><td>${event.crossBorder ? '<span class="pill amber">Yes</span>' : '<span class="pill gray">No</span>'}</td><td><div class="event-name">${event.speakers?.length || 0} / ${event.attendees || 'TBD'}</div><div class="event-sub">speakers / attendees · CV ${coverage.cvReady}/${coverage.total || 0} · agreements ${coverage.agreementReady}/${coverage.total || 0}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td>${statusPill(risk.level)}</td></tr>`;
@@ -2353,15 +2362,48 @@ Thank you.`;
       const product = document.getElementById('eventsProductFilter')?.value || 'all';
       const stage = document.getElementById('eventsStageFilter')?.value || 'all';
       const border = document.getElementById('eventsBorderFilter')?.value || 'all';
+      const sortBy = document.getElementById('eventsSortBy')?.value || 'date';
+      const sortDirection = document.getElementById('eventsSortDirection')?.value === 'desc' ? -1 : 1;
       const query = (document.getElementById('eventTableSearch')?.value || '').toLowerCase().trim();
       const global = (document.getElementById('globalSearch')?.value || '').toLowerCase().trim();
+
+      const compareText = (left, right) => {
+        const a = String(left || '').trim();
+        const b = String(right || '').trim();
+        if (!a && !b) return 0;
+        if (!a) return 1;
+        if (!b) return -1;
+        return a.localeCompare(b, undefined, { numeric:true, sensitivity:'base' }) * sortDirection;
+      };
+      const compareDate = (left, right) => {
+        const a = eventStartDate(left);
+        const b = eventStartDate(right);
+        if (!a && !b) return 0;
+        if (!a) return 1;
+        if (!b) return -1;
+        return a.localeCompare(b) * sortDirection;
+      };
+      const locationKey = event => eventIsVirtual(event)
+        ? `Virtual ${event.virtualPlatform || ''}`
+        : `${event.country || ''} ${event.city || ''} ${event.venue || ''}`;
+      const sortEvents = (a, b) => {
+        let result = 0;
+        if (sortBy === 'product') result = compareText(a.product || a.modality, b.product || b.modality);
+        else if (sortBy === 'location') result = compareText(locationKey(a), locationKey(b));
+        else result = compareDate(a, b);
+        if (result) return result;
+        const dateResult = compareDate(a, b);
+        if (dateResult) return dateResult;
+        return String(a.name || '').localeCompare(String(b.name || ''), undefined, { numeric:true, sensitivity:'base' });
+      };
+
       const list = state.events.filter(e => category === 'all' || e.eventCategory === category)
         .filter(e => product === 'all' || e.product === product)
         .filter(e => stage === 'all' || e.stage === stage)
         .filter(e => border === 'all' || (border === 'yes' ? e.crossBorder : !e.crossBorder))
         .filter(e => !query || JSON.stringify(e).toLowerCase().includes(query))
         .filter(e => !global || JSON.stringify(e).toLowerCase().includes(global))
-        .sort((a,b) => eventStartDate(a).localeCompare(eventStartDate(b)));
+        .sort(sortEvents);
       document.getElementById('allEventsTable').innerHTML = list.length ? list.map(e => eventRow(e,true)).join('') : '<tr><td colspan="10"><div class="empty-state"><strong>No matching events</strong>Adjust your filters.</div></td></tr>';
       bindDynamicEventOpeners();
     }
@@ -3857,7 +3899,7 @@ Thank you.`;
       document.getElementById('drawerBackdrop')?.addEventListener('click',closeDrawer);
       document.getElementById('portfolioCategoryFilter')?.addEventListener('change',renderUpcoming);
       document.getElementById('portfolioRiskFilter')?.addEventListener('change',renderUpcoming);
-      ['eventsCategoryFilter','eventsProductFilter','eventsStageFilter','eventsBorderFilter'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderAllEvents));
+      ['eventsCategoryFilter','eventsProductFilter','eventsStageFilter','eventsBorderFilter','eventsSortBy','eventsSortDirection'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderAllEvents));
       document.getElementById('eventTableSearch')?.addEventListener('input',renderAllEvents);
       document.getElementById('globalSearch')?.addEventListener('input',()=>{renderUpcoming();renderAllEvents();renderPhysicians();});
       document.getElementById('physicianSearch')?.addEventListener('input',renderPhysicians);
