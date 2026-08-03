@@ -1064,7 +1064,7 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newEventModalTitle">
       <div class="modal-header"><h2 id="newEventModalTitle">Create a new event</h2><button class="icon-button" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
       <div class="modal-body">
-        <div class="form-row"><div class="field"><label for="newEventName">Event name *</label><input class="input" id="newEventName" placeholder="e.g., Y-90 regional masterclass" /></div><div class="field"><label for="newEventModality">Event category *</label><input class="input" id="newEventModality" list="eventCategorySuggestions" value="Y-90" placeholder="e.g., Y-90, Workshop or Congress" /><datalist id="eventCategorySuggestions"></datalist></div></div>
+        <div class="form-row"><div class="field"><label for="newEventName">Event name *</label><input class="input" id="newEventName" placeholder="e.g., Y-90 regional masterclass" /></div><div class="field"><label for="newEventModality">Event category *</label><select class="input" id="newEventModality"><option value="Y-90" selected>Y-90</option><option value="DC Bead">DC Bead</option><option value="Cryoablation">Cryoablation</option><option value="Workshop">Workshop</option><option value="Training">Training</option><option value="Congress">Congress</option><option value="Webinar">Webinar</option><option value="Other">Other</option></select></div></div>
         <div class="category-style-grid"><div class="field"><label for="newEventCategoryBadge">Badge text</label><input class="input" id="newEventCategoryBadge" maxlength="12" value="Y-90" placeholder="Up to 12 characters" /></div><div class="field"><label for="newEventCategoryColor">Badge color</label><select class="input" id="newEventCategoryColor"></select></div></div>
         <div class="category-preview-row" id="newEventCategoryPreview" aria-live="polite"></div>
         <div class="form-row" style="margin-top:13px"><div class="field"><label for="newEventStartDate">Start date</label><input class="input" type="date" id="newEventStartDate" /></div><div class="field"><label for="newEventEndDate">End date</label><input class="input" type="date" id="newEventEndDate" /></div></div>
@@ -2100,11 +2100,18 @@ Thank you.`;
       return [...new Set([...standard, ...state.events.map(event => String(event.modality || '').trim()).filter(Boolean)])].sort((a,b) => a.localeCompare(b));
     }
 
+    function eventCategoryOptions(selected = '') {
+      return eventCategoryValues().map(value => `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('');
+    }
+
     function refreshCategoryControls() {
       const values = eventCategoryValues();
       const options = values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
-      const datalist = document.getElementById('eventCategorySuggestions');
-      if (datalist) datalist.innerHTML = values.map(value => `<option value="${escapeHtml(value)}"></option>`).join('');
+      const newEventCategory = document.getElementById('newEventModality');
+      if (newEventCategory) {
+        const current = newEventCategory.value || 'Y-90';
+        newEventCategory.innerHTML = eventCategoryOptions(values.includes(current) ? current : 'Y-90');
+      }
       ['portfolioModalityFilter','eventsModalityFilter'].forEach(id => {
         const select = document.getElementById(id);
         if (!select) return;
@@ -2566,7 +2573,7 @@ Thank you.`;
           <div class="detail-item"><label>Sponsor support</label><div>${event.sponsors?.length ? event.sponsors.map(s=>`${escapeHtml(s.name)} (${formatMoney(s.amount,state.settings.currency)}, ${escapeHtml(s.status)})`).join('<br>') : 'None recorded'}</div></div>
         </div></div></div>
         <div class="drawer-section"><div class="drawer-section-head"><h3>Event details &amp; location</h3>${statusPill(eventFormatLabel(event))}</div><div class="drawer-section-body">
-          <div class="form-row"><div class="field"><label for="eventNameEdit">Event name *</label><input class="input" id="eventNameEdit" value="${escapeHtml(event.name || '')}" /></div><div class="field"><label for="eventModalityEdit">Event category *</label><input class="input" id="eventModalityEdit" list="eventCategorySuggestions" value="${escapeHtml(event.modality || 'Other')}" placeholder="e.g., Y-90, Workshop or Congress" /></div></div>
+          <div class="form-row"><div class="field"><label for="eventNameEdit">Event name *</label><input class="input" id="eventNameEdit" value="${escapeHtml(event.name || '')}" /></div><div class="field"><label for="eventModalityEdit">Event category *</label><select class="input" id="eventModalityEdit">${eventCategoryOptions(event.modality || 'Other')}</select></div></div>
           <div class="category-style-grid"><div class="field"><label for="eventCategoryBadgeEdit">Badge text</label><input class="input" id="eventCategoryBadgeEdit" maxlength="12" value="${escapeHtml(event.categoryBadge || '')}" placeholder="Up to 12 characters" /></div><div class="field"><label for="eventCategoryColorEdit">Badge color</label><select class="input" id="eventCategoryColorEdit">${categoryColorOptions(event.categoryColor)}</select></div></div>
           <div class="category-preview-row" id="eventCategoryPreview">${categoryPreviewMarkup(event.modality,event.categoryBadge,event.categoryColor)}</div>
           <div class="form-row" style="margin-top:13px"><div class="field"><label for="eventStartDateEdit">Start date</label><input class="input" type="date" id="eventStartDateEdit" value="${escapeHtml(eventStartDate(event))}" /></div><div class="field"><label for="eventEndDateEdit">End date</label><input class="input" type="date" id="eventEndDateEdit" value="${escapeHtml(eventEndDate(event))}" /></div></div>
