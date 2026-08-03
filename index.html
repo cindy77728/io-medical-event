@@ -3885,7 +3885,10 @@ Thank you.`;
       document.getElementById('newPhysicianButton')?.addEventListener('click',()=>openPhysicianModal());
       document.getElementById('exportPhysiciansCsv')?.addEventListener('click',exportPhysiciansCsv);
       document.querySelectorAll('[data-close-physician-modal]').forEach(btn=>btn.addEventListener('click',closePhysicianModal));
-      document.getElementById('physicianModal')?.addEventListener('click',event=>{if(event.target.id==='physicianModal')closePhysicianModal();});
+      // Keep the physician modal open when the backdrop is clicked so partially entered details are not lost.
+      document.getElementById('physicianModal')?.addEventListener('click',event=>{
+        if(event.target.id==='physicianModal') event.preventDefault();
+      });
       document.getElementById('savePhysicianProfile')?.addEventListener('click',savePhysicianProfileFromUi);
       document.getElementById('deletePhysicianProfile')?.addEventListener('click',deletePhysicianProfileFromUi);
       document.getElementById('addHonorariumRate')?.addEventListener('click',()=>addHonorariumRateRow());
