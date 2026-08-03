@@ -415,7 +415,17 @@
     .category-preview-row strong { display:block; font-size:13px; }
     .category-preview-row small { display:block; margin-top:3px; color:var(--muted); font-size:12px; }
     .event-name { font-weight: 760; line-height: 1.3; }
+    .event-name-prominent { font-size: 16px; font-weight: 850; letter-spacing: -.015em; color: var(--ink); }
     .event-sub { margin-top: 3px; color: var(--soft-muted); font-size: 12px; }
+    .event-cell.event-combined { min-width: 330px; align-items: flex-start; }
+    .event-identity { min-width: 0; }
+    .event-identity-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+    .event-meta-chip {
+      display: inline-flex; align-items: center; min-height: 24px; padding: 3px 8px;
+      border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2);
+      color: var(--muted); font-size: 11px; font-weight: 760; line-height: 1.2;
+    }
+    .event-meta-chip strong { color: var(--ink); font-weight: 820; margin-right: 4px; }
     .pill {
       display: inline-flex;
       align-items: center;
@@ -921,7 +931,7 @@
             </div>
             <input class="text-control" id="eventTableSearch" placeholder="Filter this list…" />
           </div>
-          <div class="panel"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Event category</th><th>Product</th><th>Dates &amp; location</th><th>Stage</th><th>Medical</th><th>IRF</th><th>Cross-border</th><th>Speakers / attendees</th><th>Budget</th><th>Readiness</th><th>Risk</th></tr></thead><tbody id="allEventsTable"></tbody></table></div></div>
+          <div class="panel"><div class="table-wrap"><table><thead><tr><th>Event name, category &amp; product</th><th>Dates &amp; location</th><th>Stage</th><th>Medical</th><th>IRF</th><th>Cross-border</th><th>Speakers / attendees</th><th>Budget</th><th>Readiness</th><th>Risk</th></tr></thead><tbody id="allEventsTable"></tbody></table></div></div>
         </section>
 
         <section class="view" id="view-physicians">
@@ -2315,14 +2325,12 @@ Thank you.`;
       const risk = deriveRisk(event);
       const coverage = physicianDocumentCoverage(event);
       const location = eventLocation(event);
-      const eventCell = `<td><div class="event-name">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.id)}</div></td>`;
-      const productCell = `<td><div class="event-cell">${categoryBadgeMarkup(event)}<div><div class="event-name">${escapeHtml(event.product)}</div><div class="event-sub">Product</div></div></div></td>`;
+      const combinedEventCell = `<td><div class="event-cell event-combined">${categoryBadgeMarkup(event)}<div class="event-identity"><div class="event-name event-name-prominent">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.id)}</div><div class="event-identity-meta"><span class="event-meta-chip"><strong>Category</strong>${escapeHtml(event.eventCategory)}</span><span class="event-meta-chip"><strong>Product</strong>${escapeHtml(event.product)}</span></div></div></div></td>`;
       const dateCell = `<td><div class="event-name">${formatEventDateRange(event)}</div><div class="event-sub">${escapeHtml(location)}</div><div class="delivery-badge">${escapeHtml(eventFormatLabel(event))}</div></td>`;
       if (detailed) {
-        return `<tr data-event-id="${event.id}">${eventCell}<td><div class="event-name">${escapeHtml(event.eventCategory)}</div></td>${productCell}${dateCell}<td>${statusPill(event.stage)}</td><td>${statusPill(event.medical?.status || 'Not started')}</td><td>${statusPill(event.irf?.status || 'Not started')}<div class="event-sub">${escapeHtml(event.irf?.id || 'No reference')}</div></td><td>${event.crossBorder ? '<span class="pill amber">Yes</span>' : '<span class="pill gray">No</span>'}</td><td><div class="event-name">${event.speakers?.length || 0} / ${event.attendees || 'TBD'}</div><div class="event-sub">speakers / attendees · CV ${coverage.cvReady}/${coverage.total || 0} · agreements ${coverage.agreementReady}/${coverage.total || 0}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td>${statusPill(risk.level)}</td></tr>`;
+        return `<tr data-event-id="${event.id}">${combinedEventCell}${dateCell}<td>${statusPill(event.stage)}</td><td>${statusPill(event.medical?.status || 'Not started')}</td><td>${statusPill(event.irf?.status || 'Not started')}<div class="event-sub">${escapeHtml(event.irf?.id || 'No reference')}</div></td><td>${event.crossBorder ? '<span class="pill amber">Yes</span>' : '<span class="pill gray">No</span>'}</td><td><div class="event-name">${event.speakers?.length || 0} / ${event.attendees || 'TBD'}</div><div class="event-sub">speakers / attendees · CV ${coverage.cvReady}/${coverage.total || 0} · agreements ${coverage.agreementReady}/${coverage.total || 0}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td>${statusPill(risk.level)}</td></tr>`;
       }
-      const upcomingEventCell = `<td><div class="event-cell">${categoryBadgeMarkup(event)}<div><div class="event-name">${escapeHtml(event.name)}</div><div class="event-sub">${escapeHtml(event.eventCategory)} · ${escapeHtml(event.product)}</div></div></div></td>`;
-      return `<tr data-event-id="${event.id}">${upcomingEventCell}${dateCell}<td>${statusPill(event.stage)}</td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td><div class="event-name">${escapeHtml(event.owner)}</div><div class="event-sub">Medical: ${escapeHtml(event.medicalOwner)}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td>${statusPill(risk.level)}</td></tr>`;
+      return `<tr data-event-id="${event.id}">${combinedEventCell}${dateCell}<td>${statusPill(event.stage)}</td><td><div class="progress-cell"><div class="progress-head"><span>${progress}%</span><span>${progress >= 80 ? 'On track' : 'Open'}</span></div><div class="progress-bar"><span style="width:${progress}%"></span></div></div></td><td><div class="event-name">${escapeHtml(event.owner)}</div><div class="event-sub">Medical: ${escapeHtml(event.medicalOwner)}</div></td><td><span class="money">${formatMoney(event.budget?.planned || 0, state.settings.currency)}</span></td><td>${statusPill(risk.level)}</td></tr>`;
     }
 
     function renderUpcoming() {
@@ -2354,7 +2362,7 @@ Thank you.`;
         .filter(e => !query || JSON.stringify(e).toLowerCase().includes(query))
         .filter(e => !global || JSON.stringify(e).toLowerCase().includes(global))
         .sort((a,b) => eventStartDate(a).localeCompare(eventStartDate(b)));
-      document.getElementById('allEventsTable').innerHTML = list.length ? list.map(e => eventRow(e,true)).join('') : '<tr><td colspan="12"><div class="empty-state"><strong>No matching events</strong>Adjust your filters.</div></td></tr>';
+      document.getElementById('allEventsTable').innerHTML = list.length ? list.map(e => eventRow(e,true)).join('') : '<tr><td colspan="10"><div class="empty-state"><strong>No matching events</strong>Adjust your filters.</div></td></tr>';
       bindDynamicEventOpeners();
     }
 
