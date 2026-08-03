@@ -3880,7 +3880,10 @@ Thank you.`;
       document.getElementById('newEventStartDate')?.addEventListener('change',syncNewEventDateRange);
       document.getElementById('newEventButton')?.addEventListener('click',()=>{refreshCategoryControls();document.getElementById('newEventModal')?.classList.add('open');toggleNewEventLocationFields();syncNewEventCategoryPreview(false);syncNewEventDateRange();});
       document.querySelectorAll('[data-close-modal]').forEach(btn=>btn.addEventListener('click',closeNewEventModal));
-      document.getElementById('newEventModal')?.addEventListener('click',event=>{if(event.target.id==='newEventModal')closeNewEventModal();});
+      // Keep the new-event modal open when the backdrop is clicked so partially entered details are not lost.
+      document.getElementById('newEventModal')?.addEventListener('click',event=>{
+        if(event.target.id==='newEventModal') event.preventDefault();
+      });
       document.getElementById('createManualEvent')?.addEventListener('click',createManualEvent);
       document.getElementById('newPhysicianButton')?.addEventListener('click',()=>openPhysicianModal());
       document.getElementById('exportPhysiciansCsv')?.addEventListener('click',exportPhysiciansCsv);
